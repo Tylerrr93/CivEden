@@ -1,0 +1,6 @@
+name: NetherPearls
+version: ${version}
+main: com.github.longboyy.netherpearls.NetherPearls
+author: Longboyy
+description: Makes pearls drop in the nether instead of endermen
+api-version: 1.21.3

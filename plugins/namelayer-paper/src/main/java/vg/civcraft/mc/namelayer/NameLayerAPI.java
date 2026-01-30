@@ -49,11 +49,11 @@ public class NameLayerAPI implements Listener {
     }
 
     public static @Nullable UUID getUUID(String name) {
-        return toUuid.get(name.toLowerCase());
+        return name == null ? null : toUuid.get(name.toLowerCase());
     }
 
     public static @Nullable String getCurrentName(UUID uuid) {
-        return toName.get(uuid);
+        return uuid == null ? null : toName.get(uuid);
     }
 
     @EventHandler

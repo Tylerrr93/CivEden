@@ -1,0 +1,8 @@
+name: EvenMoreRewards
+version: ${version}
+main: com.github.longboyy.evenmorerewards.EvenMoreRewards
+author: Longboyy
+description: Adds more rewards to EvenMoreFish
+depend:
+  - EvenMoreFish
+api-version: 1.21.3

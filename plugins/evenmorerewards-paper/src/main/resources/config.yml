@@ -1,0 +1,11 @@
+minDrop: 1
+maxDrop: 2
+dropChances:
+  GLOW_SQUID: 0.05
+  STRIDER: 0.05
+  WITHER_SKELETON: 0.05
+  ZOMBIFIED_PIGLIN: 0.05
+  BLAZE: 0.05
+  GHAST: 0.05
+  PIGLIN: 0.05
+  HOGLIN: 0.05

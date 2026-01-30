@@ -1,0 +1,5 @@
+firstWarningLevel: 2
+kickWarningLevel: 3
+banWarningLevel: 6
+timeBetweenSamplesMillis: 200
+timeBetweenReducedWarningSeconds: 300

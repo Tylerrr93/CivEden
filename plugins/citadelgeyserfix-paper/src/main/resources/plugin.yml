@@ -1,0 +1,6 @@
+name: CitadelGeyserFix
+version: ${version}
+main: com.github.longboyy.citadelgeyserfix.CitadelGeyserFix
+author: Longboyy
+description: Makes sure bedrock players can't open things they're not supposed to
+api-version: 1.21.3

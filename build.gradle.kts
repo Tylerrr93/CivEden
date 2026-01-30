@@ -29,8 +29,10 @@ allprojects {
         maven("https://repo.codemc.io/repository/maven-public/")
         maven("https://repo.dmulloy2.net/repository/public")
         maven("https://repo.infernalsuite.com/repository/maven-snapshots/")
-        maven("https://repo.rapture.pw/repository/maven-releases/")
+        //maven("https://repo.rapture.pw/repository/maven-releases/")
         maven("https://jitpack.io")
         maven("https://repo.ajg0702.us/releases")
+        maven("https://repo.codemc.io/repository/EvenMoreFish/")
+        maven("https://nexus.scarsz.me/content/groups/public/")
     }
 }

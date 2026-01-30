@@ -146,7 +146,7 @@ public class HeliodorPlugin extends ACivMod {
         veinSpawner.start();
 
         if (meteoricIronConfig.overrideEnderEyes()) {
-            getServer().getPluginManager().registerEvents(new EnderEyeListener(meteoricIronConfig.config().world(), meteoricIronConfig.positions()), this);
+            getServer().getPluginManager().registerEvents(new EnderEyeListener(this, meteoricIronConfig.config().world(), meteoricIronConfig.positions()), this);
         }
 
         getServer().getPluginManager().registerEvents(new PickaxeBreakListener(veinCache,

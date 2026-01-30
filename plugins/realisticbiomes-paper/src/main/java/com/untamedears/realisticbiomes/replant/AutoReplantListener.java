@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.untamedears.realisticbiomes.utils.Constants;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -26,7 +27,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.java.JavaPlugin;
 import vg.civcraft.mc.civmodcore.inventory.items.MaterialUtils;
+import vg.civcraft.mc.civmodcore.players.settings.PlayerSetting;
 import vg.civcraft.mc.civmodcore.players.settings.PlayerSettingAPI;
 import vg.civcraft.mc.civmodcore.players.settings.gui.MenuSection;
 import vg.civcraft.mc.civmodcore.players.settings.impl.BooleanSetting;
@@ -36,6 +39,7 @@ public class AutoReplantListener implements Listener {
     private final boolean rightClick;
 
     private BooleanSetting toggleAutoReplant;
+    private BooleanSetting rightClickAutoReplant;
 
     public AutoReplantListener(boolean rightClick) {
         this.rightClick = rightClick;
@@ -44,16 +48,17 @@ public class AutoReplantListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
+        if(!getToggleAutoReplant(player.getUniqueId()) || getRightClickAutoReplant(player.getUniqueId())) return;
+        /*
         if (rightClick) {
             return;
         }
+         */
 
         Block block = event.getBlock();
-        Player player = event.getPlayer();
         PlayerInventory inventory = player.getInventory();
-        if (!getToggleAutoReplant(player.getUniqueId())) {
-            return;
-        }
         Material seed = getSeed(block.getType());
         if (seed == null) {
             return;
@@ -69,11 +74,18 @@ public class AutoReplantListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onRightClick(PlayerInteractEvent event) {
+        /*
         if (!rightClick
             || event.getHand() != EquipmentSlot.HAND) // Process only the main hand (no need to show 'no perms' twice)
         {
             return;
         }
+        */
+        if(event.getHand() != EquipmentSlot.HAND) return;
+
+        Player player = event.getPlayer();
+        if(!getToggleAutoReplant(player.getUniqueId()) || !getRightClickAutoReplant(player.getUniqueId())) return;
+
 
         Block block = event.getClickedBlock();
         if (block == null || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
@@ -83,11 +95,6 @@ public class AutoReplantListener implements Listener {
         ItemStack item = event.getItem();
         if (item != null && item.getType() == Constants.Stick) // Do not auto-replant when the player just want to get growth info
             return;
-
-        Player player = event.getPlayer();
-        if (!getToggleAutoReplant(player.getUniqueId())) {
-            return;
-        }
 
         Material seed = getSeed(block.getType());
         if (seed == null) {
@@ -171,6 +178,7 @@ public class AutoReplantListener implements Listener {
                     } else {
                         drop.setAmount(amount - 1);
                     }
+                    break;
                 }
             }
         }
@@ -231,12 +239,16 @@ public class AutoReplantListener implements Listener {
         MenuSection rbMenu = PlayerSettingAPI.getMainMenu()
             .createMenuSection("RealisticBiomes", "Auto replant setting", new ItemStack(
                 Material.WHEAT_SEEDS));
+        rightClickAutoReplant = new BooleanSetting(RealisticBiomes.getInstance(), true, "Use right click harvest?", "autoReplantMethod", "If true, will use right click to auto replant");
         toggleAutoReplant = new BooleanSetting(RealisticBiomes.getInstance(), true, "Use auto replant?", "autoReplant",
             rightClick ? "Will automatically harvest and replant a crop when right clicked" : "Will automatically take seeds from your inventory and replant crops");
+        PlayerSettingAPI.registerSetting(rightClickAutoReplant, rbMenu);
         PlayerSettingAPI.registerSetting(toggleAutoReplant, rbMenu);
     }
 
     public boolean getToggleAutoReplant(UUID uuid) {
         return toggleAutoReplant.getValue(uuid);
     }
+
+    public boolean getRightClickAutoReplant(UUID uuid) { return rightClickAutoReplant.getValue(uuid); }
 }

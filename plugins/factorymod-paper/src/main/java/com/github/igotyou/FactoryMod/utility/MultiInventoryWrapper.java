@@ -74,6 +74,14 @@ public class MultiInventoryWrapper implements Inventory {
 
     @Override
     public int getMaxStackSize() {
+        // Return the minimum max stack size from all wrapped inventories
+        // or default to 64 if no inventories exist
+        /*
+        int minStackSize = 64;
+        for (Inventory inv : wrapped) {
+            minStackSize = Math.min(minStackSize, inv.getMaxStackSize());
+        }
+         */
         return 64;
     }
 

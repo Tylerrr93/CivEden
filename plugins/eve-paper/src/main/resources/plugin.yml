@@ -1,0 +1,6 @@
+name: Eve
+version: ${version}
+main: com.github.longboyy.eve.EvePlugin
+author: Longboyy
+description: Adds simple snitch and chat relays for discord
+api-version: 1.21.3

@@ -565,3 +565,20 @@ hacks:
     striderMaxAge: 360000
   NetheriteCrafting:
     enabled: true
+  SpawnerNerf:
+    enabled: true
+    disableSpawners: true
+    replaceSpawnerLoot: true
+    newLoot:
+      - material: MELON_SEEDS
+        weight: 3
+        minAmount: 1
+        maxAmount: 4
+      - material: WHEAT_SEEDS
+        weight: 20
+        minAmount: 1
+        maxAmount: 16
+      - material: STONE_BRICKS
+        weight: 1
+        minAmount: 1
+        maxAmount: 16

@@ -2,9 +2,12 @@ package com.github.maxopoly.essenceglue;
 
 import com.vexsoftware.votifier.model.Vote;
 import com.vexsoftware.votifier.model.VotifierEvent;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -16,12 +19,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.geysermc.floodgate.api.FloodgateApi;
 import vg.civcraft.mc.civmodcore.players.settings.PlayerSettingAPI;
 import vg.civcraft.mc.civmodcore.players.settings.impl.LongSetting;
 import vg.civcraft.mc.civmodcore.utilities.TextUtil;
 
 public class VotifyManager implements Listener {
 
+    private final FloodgateApi floodgateApi;
     private final RewardManager rewardMan;
     private final Map<String, VotingSite> perSiteCooldowns;
     private final Map<String, LongSetting> perSiteSettings;
@@ -30,6 +35,7 @@ public class VotifyManager implements Listener {
         this.rewardMan = rewardMan;
         this.perSiteSettings = new HashMap<>();
         this.perSiteCooldowns = new HashMap<>(perSiteCooldowns);
+        this.floodgateApi = FloodgateApi.getInstance();
         for (String s : perSiteCooldowns.keySet()) {
             LongSetting setting = new LongSetting(EssenceGluePlugin.instance(), 0L, "Last vote " + s,
                 "essenceGlueVoteTime" + s);
@@ -41,11 +47,26 @@ public class VotifyManager implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onVotifierEvent(VotifierEvent event) {
         Vote vote = event.getVote();
+        String voteUsername = vote.getUsername();
         Player player = Bukkit.getPlayer(vote.getUsername());
         if (player != null) {
             handOutVotingReward(player, vote);
             return;
         }
+
+        // Bedrock player.
+        if(voteUsername.startsWith(".")){
+            var floodgatePlayer = floodgateApi.getPlayers().stream().filter(fp -> fp.getJavaUsername().equalsIgnoreCase(vote.getUsername())).findFirst();
+            if(floodgatePlayer.isPresent()){
+                player = Bukkit.getPlayer(floodgatePlayer.get().getJavaUniqueId());
+                if(player != null){
+                    handOutVotingReward(player, vote);
+                    return;
+                }
+            }
+        }
+
+
         Bukkit.getScheduler().runTaskAsynchronously(EssenceGluePlugin.instance(), () -> {
             //Mojang API rate limit is 600 requests per 10 minutes, which is not a problem for now
             UUID uuid = NewNameResolver.getUUIDForMojangName(vote.getUsername());
@@ -78,6 +99,7 @@ public class VotifyManager implements Listener {
         LongSetting serverCooldown = perSiteSettings.get(vote.getServiceName());
         long lastVoted = serverCooldown.getValue(uuid);
         long now = System.currentTimeMillis();
+        /*
         long timePassed = now - lastVoted;
         long coolDown = site.getVotingCooldown();
         if (timePassed < coolDown) {
@@ -87,8 +109,10 @@ public class VotifyManager implements Listener {
                     + ChatColor.AQUA + TextUtil.formatDuration(remaining));
             return;
         }
+         */
         serverCooldown.setValue(uuid, now);
         rewardMan.giveVoteReward(player, site.getName());
+        announceToServer(player, site.getName());
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
@@ -114,6 +138,17 @@ public class VotifyManager implements Listener {
                 }, 20L);
             }
         }
+    }
+
+    private void announceToServer(Player player, String siteName){
+        net.kyori.adventure.text.TextComponent textComponent = Component.text("Thank you to ", NamedTextColor.GREEN)
+                .append(Component.text(player.getName(), NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text(" for voting on ", NamedTextColor.GREEN))
+                .append(Component.text(siteName, NamedTextColor.LIGHT_PURPLE));
+
+        Bukkit.getOnlinePlayers().forEach(onlinePlayer -> {
+            onlinePlayer.sendMessage(textComponent);
+        });
     }
 
     public long getLastVote(String internalSiteKey, UUID player) {
