@@ -40,6 +40,12 @@ public class RelayDiscordCommand extends AuthedDiscordCommand {
     @Override
     protected void execute(AuthedCommandContext ctx) {
         SlashCommandEvent event = ctx.getEvent();
+
+        if(event.getGuild() == null){
+            event.reply("This command must be executed in a discord server.").setEphemeral(true).queue();
+            return;
+        }
+
         event.deferReply(true).queue();
 
         String groupName = Objects.requireNonNull(event.getOption("group_name")).getAsString();

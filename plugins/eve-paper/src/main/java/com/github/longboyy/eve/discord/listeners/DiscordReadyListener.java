@@ -1,6 +1,7 @@
 package com.github.longboyy.eve.discord.listeners;
 
 import com.github.longboyy.eve.EvePlugin;
+import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.events.guild.GuildJoinEvent;
@@ -27,7 +28,8 @@ public class DiscordReadyListener extends DiscordListener {
     }
 
     @Subscribe
-    public void onDiscordJoin(GuildJoinEvent event){
+    public void onDiscordGuildJoin(GuildJoinEvent event){
+        this.plugin.getDiscordCommandManager().registerCommandsForGuild(event.getGuild());
 
     }
 

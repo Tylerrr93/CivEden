@@ -59,4 +59,3 @@ include(":plugins:eve-paper")
 include(":plugins:repelshitters-paper")
 include(":plugins:creativeworlds-paper")
 include(":plugins:shortwave-paper")
-

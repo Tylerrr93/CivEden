@@ -3,7 +3,6 @@ package com.github.longboyy.eve;
 import com.github.longboyy.eve.command.ForceGuildUpdateCommand;
 import com.github.longboyy.eve.database.EveDAO;
 import com.github.longboyy.eve.discord.DiscordCommandManager;
-import com.github.longboyy.eve.discord.listeners.DiscordGuildJoinListener;
 import com.github.longboyy.eve.discord.listeners.DiscordReadyListener;
 import com.github.longboyy.eve.listeners.SnitchListener;
 import github.scarsz.discordsrv.DiscordSRV;
@@ -17,7 +16,6 @@ public class EvePlugin extends ACivMod {
     private final DiscordCommandManager discordCommandManager;
     private final RelayManager relayManager;
     private final DiscordReadyListener discordReadyListener;
-    private final DiscordGuildJoinListener discordGuildJoinListener;
 
     private CommandManager commandManager;
     private EveDAO dao;
@@ -27,7 +25,6 @@ public class EvePlugin extends ACivMod {
         this.config = new EvePluginConfig(this);
         this.discordCommandManager = new DiscordCommandManager(this);
         this.relayManager = new RelayManager(this);
-        this.discordGuildJoinListener = new DiscordGuildJoinListener(this.discordCommandManager);
         this.discordReadyListener = new DiscordReadyListener(this);
     }
 
@@ -49,8 +46,6 @@ public class EvePlugin extends ACivMod {
         }else{
             this.discordReadyListener.register();
         }
-
-        this.discordGuildJoinListener.register();
         this.registerListener(this.snitchListener);
 
         this.commandManager.registerCommand(new ForceGuildUpdateCommand(this));
@@ -60,7 +55,6 @@ public class EvePlugin extends ACivMod {
     public void onDisable() {
         super.onDisable();
         this.discordReadyListener.unregister();
-        this.discordGuildJoinListener.unregister();
         HandlerList.unregisterAll(this);
     }
 
