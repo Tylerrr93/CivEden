@@ -40,7 +40,7 @@ public class RespawnListener implements Listener {
         List<String> randomSpawnFlags = plugin.yamlHandler.worlds.getStringList(worldName + ".randomspawnon");
         List<String> spawnPointFlags = plugin.yamlHandler.worlds.getStringList(worldName + ".spawnpointson");
 
-        if (event.isBedSpawn() && !randomSpawnFlags.contains("bedrespawn")) {
+        if ((event.isBedSpawn() || event.isAnchorSpawn()) && !randomSpawnFlags.contains("bedrespawn")) {
             plugin.logDebug(playerName + " is spawned at his bed!");
             return;
         }

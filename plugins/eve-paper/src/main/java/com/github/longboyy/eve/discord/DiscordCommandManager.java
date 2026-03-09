@@ -35,6 +35,7 @@ public class DiscordCommandManager implements SlashCommandProvider {
         if(!IS_SETUP) {
             DiscordSRV.api.addSlashCommandProvider(this);
         }
+        //DiscordSRV.getPlugin().getJda().updateCommands().addCommands(getCommandData()).queue();
         DiscordSRV.api.updateSlashCommands();
         IS_SETUP = true;
     }

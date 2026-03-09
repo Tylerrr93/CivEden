@@ -151,6 +151,10 @@ public final class OneTimeTeleport extends SimpleHack<OneTimeTeleportConfig> imp
                     sender.sendMessage(Component.text("You cannot OTT to another world!", NamedTextColor.RED));
                     return;
                 }
+                case FAIL_TARGET_IS_PEARLED -> {
+                    sender.sendMessage(Component.text("You cannot OTT to a pearled player!", NamedTextColor.RED));
+                    return;
+                }
             }
 
             final UUID previousRequest = OneTimeTeleport.this.senderToReceiver.put(
@@ -251,6 +255,11 @@ public final class OneTimeTeleport extends SimpleHack<OneTimeTeleportConfig> imp
                 case FAIL_DIFFERENT_WORLD -> {
                     sender.sendMessage(Component.text(requestingPlayer.getName() + " could not one-time teleport as they're in a different world!", NamedTextColor.RED));
                     requestingPlayer.sendMessage(Component.text(sender.getName() + " accepted your request, but you're in a different world!", NamedTextColor.RED));
+                    return;
+                }
+                case FAIL_TARGET_IS_PEARLED -> {
+                    sender.sendMessage(Component.text(requestingPlayer.getName() + " could not one-time teleport as you're pearled!", NamedTextColor.RED));
+                    requestingPlayer.sendMessage(Component.text(sender.getName() + " accepted your request, but they're pearled", NamedTextColor.RED));
                     return;
                 }
             }
@@ -373,7 +382,7 @@ public final class OneTimeTeleport extends SimpleHack<OneTimeTeleportConfig> imp
     /**
      * All possible permissible states that requesting and accepting share!
      */
-    private enum OttPermissible {OK, FAIL_NO_OTT, FAIL_IN_COMBAT, FAIL_IS_PEARLED, FAIL_DIFFERENT_WORLD}
+    private enum OttPermissible {OK, FAIL_NO_OTT, FAIL_IN_COMBAT, FAIL_IS_PEARLED, FAIL_DIFFERENT_WORLD, FAIL_TARGET_IS_PEARLED}
 
     private @NotNull OttPermissible testPermissibility(
         final @NotNull Player requestingPlayer,
@@ -391,6 +400,10 @@ public final class OneTimeTeleport extends SimpleHack<OneTimeTeleportConfig> imp
         if (Bukkit.getPluginManager().isPluginEnabled("ExilePearl")) {
             if (ExilePearlPlugin.getApi().getPearlManager().getPearl(requestingPlayer.getUniqueId()) != null) {
                 return OttPermissible.FAIL_IS_PEARLED;
+            }
+
+            if(ExilePearlPlugin.getApi().getPearlManager().getPearl(destinationPlayer.getUniqueId()) != null) {
+                return OttPermissible.FAIL_TARGET_IS_PEARLED;
             }
         }
         if (config().isLimitingToSameWorld()) {

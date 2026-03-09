@@ -24,6 +24,9 @@ public class MobListener implements Listener {
         EntityEquipment equipment = entity.getEquipment();
         if (equipment == null) return;
 
+        // make sure there are no fucking emeralds or totems(Vindicators and Evokers)
+        event.getDrops().removeIf(item -> item.getType() == Material.EMERALD || item.getType() == Material.TOTEM_OF_UNDYING);
+
         // Remove armor and weapons from drops
         event.getDrops().removeIf(item -> isArmor(item.getType()) || isWeapon(item.getType()));
 
