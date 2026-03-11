@@ -967,7 +967,7 @@ public class PlayerListener implements Listener, Configurable {
         if (pearlApi.isPlayerExiled(player)) {
             if (useHelpItem) giveHelpItem(player);
             ExilePearl pearl = pearlApi.getPearl(player.getUniqueId());
-            if (pearl.getPearlType() == PearlType.PRISON) {
+            if (pearl.getPearlType() == PearlType.PRISON && !e.isAnchorSpawn()) {
                 e.setRespawnLocation(SpawnUtil.chooseSpawn(pearlApi.getPearlConfig().getPrisonWorld()));
             }
 
