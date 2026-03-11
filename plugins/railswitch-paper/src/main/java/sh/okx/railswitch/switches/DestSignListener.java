@@ -32,7 +32,7 @@ public final class DestSignListener implements Listener {
         }
         var side = sign.getSide(Side.FRONT);
         String line0 = PLAIN.serialize(side.line(0)).trim();
-        if (!line0.equalsIgnoreCase("[dest]") && !line0.equalsIgnoreCase("[destination]")) {
+        if (SwitchType.find(line0) == null) {
             return;
         }
 
