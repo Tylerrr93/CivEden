@@ -8,7 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 public enum SwitchType {
 
     NORMAL("[destination]"),
-    INVERTED("[!destination]");
+    INVERTED("[!destination]"),
+    DEST("[dest]");
 
     private final String tag;
 
@@ -40,4 +41,4 @@ public enum SwitchType {
         return null;
     }
 
-}
+} 

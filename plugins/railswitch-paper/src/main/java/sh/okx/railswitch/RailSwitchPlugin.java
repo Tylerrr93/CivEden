@@ -7,6 +7,7 @@ import sh.okx.railswitch.settings.SettingsManager;
 import sh.okx.railswitch.switches.SwitchListener;
 import vg.civcraft.mc.civmodcore.ACivMod;
 import vg.civcraft.mc.civmodcore.commands.CommandManager;
+import sh.okx.railswitch.switches.DestSignListener;
 
 /**
  * The Rail Switch plugin class
@@ -21,6 +22,7 @@ public final class RailSwitchPlugin extends ACivMod implements Listener {
         SettingsManager.init(this);
         registerListener(new CitadelGlue(this));
         registerListener(new SwitchListener());
+        registerListener(new DestSignListener());
         commandManager = new CommandManager(this);
         commandManager.init();
         commandManager.registerCommand(new DestinationCommand());
