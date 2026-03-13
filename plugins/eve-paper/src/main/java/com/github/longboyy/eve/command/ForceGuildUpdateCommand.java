@@ -1,6 +1,7 @@
 package com.github.longboyy.eve.command;
 
 import co.aikar.commands.BaseCommand;
+import co.aikar.commands.CommandIssuer;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import com.github.longboyy.eve.EvePlugin;
@@ -17,9 +18,9 @@ public class ForceGuildUpdateCommand extends BaseCommand {
 
     @CommandAlias("forceguildupdate")
     @CommandPermission("eve.forceguildupdate")
-    public void onForceGuildUpdateCommand(Player player){
+    public void onForceGuildUpdateCommand(CommandIssuer issuer){
         plugin.getDiscordCommandManager().registerCommands();
-        player.sendMessage("Updated discord commands");
+        issuer.sendMessage("Updated discord commands");
     }
 
 }
