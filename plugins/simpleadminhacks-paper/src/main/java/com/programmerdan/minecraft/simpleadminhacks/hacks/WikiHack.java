@@ -15,7 +15,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
-public class WikiHack extends SimpleHack<WikiHackConfig> implements Listener, CommandExecutor {
+public class WikiHack extends SimpleHack<WikiHackConfig> implements CommandExecutor {
 
     public WikiHack(SimpleAdminHacks plugin, WikiHackConfig config) {
         super(plugin, config);
@@ -27,13 +27,7 @@ public class WikiHack extends SimpleHack<WikiHackConfig> implements Listener, Co
 
     @Override
     public void onEnable() {
-        plugin.registerListener(this);
         plugin.registerCommand("wiki", this);
-    }
-
-    @Override
-    public void onDisable() {
-        HandlerList.unregisterAll(this);
     }
 
     @Override
