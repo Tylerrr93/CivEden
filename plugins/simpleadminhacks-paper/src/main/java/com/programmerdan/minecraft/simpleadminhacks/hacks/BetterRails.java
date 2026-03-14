@@ -4,7 +4,6 @@ package com.programmerdan.minecraft.simpleadminhacks.hacks;
 import com.programmerdan.minecraft.simpleadminhacks.SimpleAdminHacks;
 import com.programmerdan.minecraft.simpleadminhacks.configs.BetterRailsConfig;
 import com.programmerdan.minecraft.simpleadminhacks.framework.SimpleHack;
-import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,11 +17,24 @@ import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 
+import java.util.Set;
+
 public final class BetterRails extends SimpleHack<BetterRailsConfig> implements Listener {
 
     // A minecart goes at 8m/s but its internal speed is 0.4, this adjusts for that
     private static final double METRES_PER_SECOND_TO_SPEED = 0.05;
     private static final double VANILLA_SPEED = 0.4;
+
+    // List valid blocks which dont block rail speed boost
+    private static final Set<Material> GLASS_BLOCKS = Set.of(
+            Material.GLASS,
+            Material.BLACK_STAINED_GLASS, Material.BLUE_STAINED_GLASS, Material.BROWN_STAINED_GLASS,
+            Material.CYAN_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.GREEN_STAINED_GLASS,
+            Material.LIGHT_BLUE_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS, Material.LIME_STAINED_GLASS,
+            Material.MAGENTA_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.PINK_STAINED_GLASS,
+            Material.PURPLE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.WHITE_STAINED_GLASS,
+            Material.YELLOW_STAINED_GLASS
+    );
 
     public BetterRails(SimpleAdminHacks plugin, final BetterRailsConfig config) {
         super(plugin, config);
@@ -83,21 +95,43 @@ public final class BetterRails extends SimpleHack<BetterRailsConfig> implements 
         minecart.setMaxSpeed(VANILLA_SPEED);
     }
 
-
     private void adjustSpeed(Minecart minecart) {
-        Material belowRail = minecart.getLocation().subtract(0, 1, 0).getBlock().getType();
-        Material belowRail2 = minecart.getLocation().subtract(0, 2, 0).getBlock().getType();
+        Location loc = minecart.getLocation();
+
+        Material belowRail = loc.clone().subtract(0, 1, 0).getBlock().getType();
+        Material belowRail2 = loc.clone().subtract(0, 2, 0).getBlock().getType();
 
         double speedMetresPerSecond;
 
-        if (minecart.getLocation().getBlockY() == minecart.getWorld().getHighestBlockYAt(minecart.getLocation(), HeightMap.WORLD_SURFACE)) {
-            speedMetresPerSecond = maxOrGet(config.getSkySpeedMetresPerSecond(belowRail), config.getSkySpeedMetresPerSecond(belowRail2), config.getSkySpeed());
+        if (hasOpenSky(loc)) {
+            speedMetresPerSecond = maxOrGet(
+                    config.getSkySpeedMetresPerSecond(belowRail),
+                    config.getSkySpeedMetresPerSecond(belowRail2),
+                    config.getSkySpeed()
+            );
         } else {
-            speedMetresPerSecond = maxOrGet(config.getMaxSpeedMetresPerSecond(belowRail), config.getMaxSpeedMetresPerSecond(belowRail2), config.getBaseSpeed());
+            speedMetresPerSecond = maxOrGet(
+                    config.getMaxSpeedMetresPerSecond(belowRail),
+                    config.getMaxSpeedMetresPerSecond(belowRail2),
+                    config.getBaseSpeed()
+            );
         }
 
-
         minecart.setMaxSpeed(speedMetresPerSecond * METRES_PER_SECOND_TO_SPEED);
+    }
+
+    private boolean hasOpenSky(Location loc) {
+        int x = loc.getBlockX();
+        int z = loc.getBlockZ();
+        int y = loc.getBlockY();
+
+        for (int i = y + 1; i < loc.getWorld().getMaxHeight(); i++) {
+            if (GLASS_BLOCKS.contains(loc.getWorld().getBlockAt(x, i, z).getType())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private double maxOrGet(Double left, Double right, double defaultAmount) {
