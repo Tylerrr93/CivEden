@@ -2,11 +2,7 @@ package com.programmerdan.minecraft.civspy.listeners.impl;
 
 import com.programmerdan.minecraft.civspy.DataManager;
 import com.programmerdan.minecraft.civspy.PointDataSample;
-import com.programmerdan.minecraft.civspy.annotations.RequirePlugins;
 import com.programmerdan.minecraft.civspy.listeners.ServerDataListener;
-import isaac.bastion.BastionBlock;
-import isaac.bastion.event.BastionCreateEvent;
-import isaac.bastion.event.BastionDamageEvent;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,12 +10,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.sign.Side;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.SignChangeEvent;
-import vg.civcraft.mc.citadel.model.Reinforcement;
 
 public final class SignChangeListener extends ServerDataListener {
 
