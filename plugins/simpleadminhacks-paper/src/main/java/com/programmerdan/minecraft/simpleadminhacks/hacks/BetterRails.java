@@ -26,14 +26,14 @@ public final class BetterRails extends SimpleHack<BetterRailsConfig> implements 
     private static final double VANILLA_SPEED = 0.4;
 
     // List valid blocks which dont block rail speed boost
-    private static final Set<Material> GLASS_BLOCKS = Set.of(
-            Material.GLASS,
-            Material.BLACK_STAINED_GLASS, Material.BLUE_STAINED_GLASS, Material.BROWN_STAINED_GLASS,
-            Material.CYAN_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.GREEN_STAINED_GLASS,
-            Material.LIGHT_BLUE_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS, Material.LIME_STAINED_GLASS,
-            Material.MAGENTA_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.PINK_STAINED_GLASS,
-            Material.PURPLE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.WHITE_STAINED_GLASS,
-            Material.YELLOW_STAINED_GLASS
+    private static final Set<Material> VALID_SPEED_BLOCKS = Set.of(
+        Material.GLASS,
+        Material.BLACK_STAINED_GLASS, Material.BLUE_STAINED_GLASS, Material.BROWN_STAINED_GLASS,
+        Material.CYAN_STAINED_GLASS, Material.GRAY_STAINED_GLASS, Material.GREEN_STAINED_GLASS,
+        Material.LIGHT_BLUE_STAINED_GLASS, Material.LIGHT_GRAY_STAINED_GLASS, Material.LIME_STAINED_GLASS,
+        Material.MAGENTA_STAINED_GLASS, Material.ORANGE_STAINED_GLASS, Material.PINK_STAINED_GLASS,
+        Material.PURPLE_STAINED_GLASS, Material.RED_STAINED_GLASS, Material.WHITE_STAINED_GLASS,
+        Material.YELLOW_STAINED_GLASS, Material.TINTED_GLASS, Material.WATER, Material.AIR, Material.CAVE_AIR
     );
 
     public BetterRails(SimpleAdminHacks plugin, final BetterRailsConfig config) {
@@ -105,15 +105,15 @@ public final class BetterRails extends SimpleHack<BetterRailsConfig> implements 
 
         if (hasOpenSky(loc)) {
             speedMetresPerSecond = maxOrGet(
-                    config.getSkySpeedMetresPerSecond(belowRail),
-                    config.getSkySpeedMetresPerSecond(belowRail2),
-                    config.getSkySpeed()
+                config.getSkySpeedMetresPerSecond(belowRail),
+                config.getSkySpeedMetresPerSecond(belowRail2),
+                config.getSkySpeed()
             );
         } else {
             speedMetresPerSecond = maxOrGet(
-                    config.getMaxSpeedMetresPerSecond(belowRail),
-                    config.getMaxSpeedMetresPerSecond(belowRail2),
-                    config.getBaseSpeed()
+                config.getMaxSpeedMetresPerSecond(belowRail),
+                config.getMaxSpeedMetresPerSecond(belowRail2),
+                config.getBaseSpeed()
             );
         }
 
@@ -126,11 +126,12 @@ public final class BetterRails extends SimpleHack<BetterRailsConfig> implements 
         int y = loc.getBlockY();
 
         for (int i = y + 1; i < loc.getWorld().getMaxHeight(); i++) {
-            if (GLASS_BLOCKS.contains(loc.getWorld().getBlockAt(x, i, z).getType())) {
-                return false;
+            Material mat = loc.getWorld().getBlockAt(x, i, z).getType();
+            if (VALID_SPEED_BLOCKS.contains(mat)) {
+                continue;
             }
+            return false;
         }
-
         return true;
     }
 
