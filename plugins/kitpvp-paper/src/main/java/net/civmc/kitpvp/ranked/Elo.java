@@ -2,7 +2,11 @@ package net.civmc.kitpvp.ranked;
 
 public class Elo {
 
-    private static final double K = 32;
+    private static double K = 32;
+
+    public static void configure(double k) {
+        K = k;
+    }
 
     public static EloChange getChange(double player, double opponent) {
         double playerExpected = 1.0 / (1.0 + Math.pow(10, (opponent - player) / 400));

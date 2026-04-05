@@ -45,6 +45,7 @@ public class RankedQueueManager {
     private final RankedDao dao;
     private final ArenaManager arenaManager;
     private final SpawnProvider spawnProvider;
+    private final RankedConfig config;
 
     private final Arena arena;
 
@@ -59,11 +60,12 @@ public class RankedQueueManager {
 
     private final RankedPlayers players;
 
-    public RankedQueueManager(KitPvpDao kitDao, RankedDao dao, ArenaManager arenaManager, SpawnProvider spawnProvider, Arena arena, RankedPlayers players) {
+    public RankedQueueManager(KitPvpDao kitDao, RankedDao dao, ArenaManager arenaManager, SpawnProvider spawnProvider, Arena arena, RankedPlayers players, RankedConfig config) {
         this.kitDao = kitDao;
         this.dao = dao;
         this.arenaManager = arenaManager;
         this.spawnProvider = spawnProvider;
+        this.config = config;
 
         this.arena = arena;
         this.players = players;
@@ -77,7 +79,7 @@ public class RankedQueueManager {
             try {
                 for (Iterator<RankedMatch> iterator = matches.iterator(); iterator.hasNext(); ) {
                     RankedMatch match = iterator.next();
-                    if (Instant.now().isAfter(match.started().plus(10, ChronoUnit.MINUTES))) {
+                    if (Instant.now().isAfter(match.started().plus(config.matchTimeoutMinutes(), ChronoUnit.MINUTES))) {
                         iterator.remove();
                         mostPotsWinsOrDraw(match);
                     }
@@ -85,11 +87,11 @@ public class RankedQueueManager {
                 scanQueue();
                 scanQueueUnranked();
                 for (RankedMatch match : matches) {
-                    if (match.opponent().getY() > 90) {
+                    if (match.opponent().getY() > config.maxHeight()) {
                         match.opponent().addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 50, 1, false, false));
                         match.opponent().sendMessage(Component.text("You are too high!", NamedTextColor.RED));
                     }
-                    if (match.player().getY() > 90) {
+                    if (match.player().getY() > config.maxHeight()) {
                         match.player().addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 50, 1, false, false));
                         match.player().sendMessage(Component.text("You are too high!", NamedTextColor.RED));
                     }
@@ -239,8 +241,8 @@ public class RankedQueueManager {
         Elo.EloChange opponentChange = Elo.getChange(match.opponentElo(), match.playerElo());
 
         if (winner == null) {
-            player.sendMessage(Component.text("The match has ended in a draw because it timed out! (10 minutes)", NamedTextColor.GRAY));
-            opponent.sendMessage(Component.text("The match has ended in a draw because it timed out! (10 minutes)", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("The match has ended in a draw because it timed out! (" + config.matchTimeoutMinutes() + " minutes)", NamedTextColor.GRAY));
+            opponent.sendMessage(Component.text("The match has ended in a draw because it timed out! (" + config.matchTimeoutMinutes() + " minutes)", NamedTextColor.GRAY));
 
             Bukkit.getScheduler().runTaskLater(JavaPlugin.getPlugin(KitPvpPlugin.class), () -> {
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_TELEPORT, 1, 1);
@@ -341,7 +343,7 @@ public class RankedQueueManager {
             double elo = dao.getElo(player.getUniqueId());
             Kit kit;
             if (kitId == -1) {
-                kit = kitDao.getKit("Ranked", null);
+                kit = kitDao.getKit(config.defaultKitName(), null);
             } else {
                 kit = kitDao.getKit(kitId);
             }
@@ -401,7 +403,7 @@ public class RankedQueueManager {
             int kitId = dao.getKit(player.getUniqueId());
             Kit kit;
             if (kitId == -1) {
-                kit = kitDao.getKit("Ranked", null);
+                kit = kitDao.getKit(config.defaultKitName(), null);
             } else {
                 kit = kitDao.getKit(kitId);
             }
@@ -453,27 +455,27 @@ public class RankedQueueManager {
                     continue;
                 }
 
-                int maxGap = 200;
+                int maxGap = config.initialEloGap();
                 Instant earlier = playerEntry.getValue().joined();
                 if (opponentEntry.getValue().joined().isBefore(earlier)) {
                     earlier = opponentEntry.getValue().joined();
                 }
                 double maxTime = earlier.until(Instant.now(), ChronoUnit.SECONDS);
                 if (maxTime > 60) {
-                    maxGap = 10000;
+                    maxGap = config.gapAt60s();
                 } else if (maxTime > 40) {
-                    maxGap = 400;
+                    maxGap = config.gapAt40s();
                 } else if (maxTime > 20) {
-                    maxGap = 300;
+                    maxGap = config.gapAt20s();
                 }
 
                 RecentMatch recent = recentMatches.get(playerEntry.getKey().getUniqueId());
-                if (recent != null && recent.other().equals(opponentEntry.getKey().getUniqueId()) && recent.time().until(Instant.now(), ChronoUnit.SECONDS) < 45) {
+                if (recent != null && recent.other().equals(opponentEntry.getKey().getUniqueId()) && recent.time().until(Instant.now(), ChronoUnit.SECONDS) < config.recentMatchCooldownSeconds()) {
                     continue;
                 }
 
                 RecentMatch recent2 = recentMatches.get(opponentEntry.getKey().getUniqueId());
-                if (recent2 != null && recent2.other().equals(playerEntry.getKey().getUniqueId()) && recent2.time().until(Instant.now(), ChronoUnit.SECONDS) < 45) {
+                if (recent2 != null && recent2.other().equals(playerEntry.getKey().getUniqueId()) && recent2.time().until(Instant.now(), ChronoUnit.SECONDS) < config.recentMatchCooldownSeconds()) {
                     continue;
                 }
 
@@ -504,12 +506,12 @@ public class RankedQueueManager {
                 }
 
                 RecentMatch recent = recentMatches.get(playerEntry.getKey().getUniqueId());
-                if (recent != null && recent.other().equals(opponentEntry.getKey().getUniqueId()) && recent.time().until(Instant.now(), ChronoUnit.SECONDS) < 45) {
+                if (recent != null && recent.other().equals(opponentEntry.getKey().getUniqueId()) && recent.time().until(Instant.now(), ChronoUnit.SECONDS) < config.recentMatchCooldownSeconds()) {
                     continue;
                 }
 
                 RecentMatch recent2 = recentMatches.get(opponentEntry.getKey().getUniqueId());
-                if (recent2 != null && recent2.other().equals(playerEntry.getKey().getUniqueId()) && recent2.time().until(Instant.now(), ChronoUnit.SECONDS) < 45) {
+                if (recent2 != null && recent2.other().equals(playerEntry.getKey().getUniqueId()) && recent2.time().until(Instant.now(), ChronoUnit.SECONDS) < config.recentMatchCooldownSeconds()) {
                     continue;
                 }
 
@@ -531,14 +533,14 @@ public class RankedQueueManager {
                 int playerKitId = dao.getKit(player.getUniqueId());
                 Kit playerKit;
                 if (playerKitId == -1) {
-                    playerKit = kitDao.getKit("Ranked", null);
+                    playerKit = kitDao.getKit(config.defaultKitName(), null);
                 } else {
                     playerKit = kitDao.getKit(playerKitId);
                 }
                 int opponentKitId = dao.getKit(opponent.getUniqueId());
                 Kit opponentKit;
                 if (opponentKitId == -1) {
-                    opponentKit = kitDao.getKit("Ranked", null);
+                    opponentKit = kitDao.getKit(config.defaultKitName(), null);
                 } else {
                     opponentKit = kitDao.getKit(opponentKitId);
                 }
@@ -552,18 +554,18 @@ public class RankedQueueManager {
                     }
 
                     WorldBorder border = world.getWorldBorder();
-                    border.setCenter(72.50, 72.50);
-                    border.setSize(143);
-                    border.setSize(5, 8 * 60);
+                    border.setCenter(config.borderCenterX(), config.borderCenterZ());
+                    border.setSize(config.borderInitialSize());
+                    border.setSize(config.borderFinalSize(), config.borderShrinkSeconds());
                     border.setDamageBuffer(0);
-                    border.setDamageAmount(3);
+                    border.setDamageAmount(config.borderDamageAmount());
 
                     player.closeInventory();
                     opponent.closeInventory();
                     player.setFallDistance(0);
-                    player.teleport(new Location(world, 42.5, 72, 33.5, -45, 0));
+                    player.teleport(new Location(world, config.spawn1X(), config.spawn1Y(), config.spawn1Z(), config.spawn1Yaw(), config.spawn1Pitch()));
                     opponent.setFallDistance(0);
-                    opponent.teleport(new Location(world, 96.5, 72, 89.5, 135, 0));
+                    opponent.teleport(new Location(world, config.spawn2X(), config.spawn2Y(), config.spawn2Z(), config.spawn2Yaw(), config.spawn2Pitch()));
                     player.setGameMode(GameMode.SURVIVAL);
                     opponent.setGameMode(GameMode.SURVIVAL);
                     KitApplier.applyKit(playerKit, player);

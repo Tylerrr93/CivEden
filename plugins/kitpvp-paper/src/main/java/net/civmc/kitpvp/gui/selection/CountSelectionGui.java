@@ -28,7 +28,7 @@ public class CountSelectionGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         ItemStack kitItem = kit.items()[this.slot].clone();
         ItemStack custom = new ItemStack(Material.PAPER);
         ItemMeta customMeta = custom.getItemMeta();
@@ -43,7 +43,7 @@ public class CountSelectionGui extends ItemSelectionGui {
                     @Override
                     public void onClose() {
                         JavaPlugin plugin = JavaPlugin.getProvidingPlugin(KitPvpPlugin.class);
-                        Bukkit.getScheduler().runTask(plugin, CountSelectionGui.this::open);
+                        Bukkit.getScheduler().runTask(plugin, () -> CountSelectionGui.this.open());
                     }
 
                     @Override
