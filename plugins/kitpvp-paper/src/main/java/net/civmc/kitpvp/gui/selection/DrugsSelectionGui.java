@@ -18,7 +18,7 @@ public class DrugsSelectionGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         int slot = 0;
         for (KitDrugs drug : KitDrugs.values()) {
             BRecipe matching = BRecipe.getMatching(drug.getBrew());

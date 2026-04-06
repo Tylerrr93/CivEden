@@ -19,7 +19,7 @@ public class BlockSelectionGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         List<KitItem> items = KitItem.getItems(KitCategory.BLOCK);
         for (int i = 0; i < items.size(); i++) {
             KitItem item = items.get(i);

@@ -29,7 +29,7 @@ public class PotionsSelectionGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         int slot = 0;
         for (KitPotion potionType : KitPotion.values()) {
             ItemStack potion = new ItemStack(base);

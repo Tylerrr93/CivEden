@@ -35,7 +35,7 @@ public class ItemCategorySelectionGui extends ItemSelectionGui {
         this.gui = gui;
     }
 
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         ItemStack none = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta noneMeta = none.getItemMeta();
         noneMeta.itemName(Component.text("None", NamedTextColor.GOLD));

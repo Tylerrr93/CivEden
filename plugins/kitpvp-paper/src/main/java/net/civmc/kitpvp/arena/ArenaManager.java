@@ -14,6 +14,7 @@ import com.infernalsuite.asp.api.AdvancedSlimePaperAPI;
 import com.infernalsuite.asp.api.exceptions.CorruptedWorldException;
 import com.infernalsuite.asp.api.exceptions.NewerFormatException;
 import com.infernalsuite.asp.api.exceptions.UnknownWorldException;
+import com.infernalsuite.asp.api.loaders.SlimeLoader;
 import com.infernalsuite.asp.api.world.SlimeWorld;
 import com.infernalsuite.asp.api.world.properties.SlimeProperties;
 import com.infernalsuite.asp.api.world.properties.SlimePropertyMap;
@@ -43,11 +44,11 @@ public class ArenaManager {
     private int maxArenas;
     private final JavaPlugin plugin;
     private final SpawnProvider spawn;
-    private final MysqlLoader templateLoader;
+    private final SlimeLoader templateLoader;
     private final SequencedMap<UUID, LoadedArena> arenas = new LinkedHashMap<>();
     private final List<LoadedArena> rankedArenas = new ArrayList<>();
 
-    public ArenaManager(int maxArenas, JavaPlugin plugin, SpawnProvider spawn, MysqlLoader templateLoader) {
+    public ArenaManager(int maxArenas, JavaPlugin plugin, SpawnProvider spawn, SlimeLoader templateLoader) {
         this.maxArenas = maxArenas;
         this.plugin = plugin;
         this.spawn = spawn;

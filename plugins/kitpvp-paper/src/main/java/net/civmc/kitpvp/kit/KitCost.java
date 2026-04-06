@@ -15,22 +15,23 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import vg.civcraft.mc.civmodcore.inventory.CustomItem;
 
 public class KitCost {
 
-    public static final int MAX_POINTS = 50;
+    public static int MAX_POINTS = 50;
+    public static int UNBREAKABLE_COST = 100;
+    public static int TIPPED_ARROW_COST = 4;
+    public static Map<Enchantment, Integer> ENCHANTMENT_COST_PER_LEVEL = new HashMap<>();
+    private static List<CustomItemConfig> customItems = List.of();
 
-    public static final Map<Enchantment, Integer> ENCHANTMENT_COST_PER_LEVEL = new HashMap<>();
-
-    static {
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.PROTECTION, 1);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.SHARPNESS, 1);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.KNOCKBACK, 1);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.POWER, 1);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.THORNS, 1);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.SWIFT_SNEAK, 100);
-        ENCHANTMENT_COST_PER_LEVEL.put(Enchantment.PIERCING, 1);
+    public static void configure(int maxPoints, int unbreakableCost, int tippedArrowCost,
+                                  Map<Enchantment, Integer> enchantmentCosts,
+                                  List<CustomItemConfig> items) {
+        MAX_POINTS = maxPoints;
+        UNBREAKABLE_COST = unbreakableCost;
+        TIPPED_ARROW_COST = tippedArrowCost;
+        ENCHANTMENT_COST_PER_LEVEL = enchantmentCosts;
+        customItems = items;
     }
 
     public static ItemStack setPoints(ItemStack item, int points) {
@@ -59,11 +60,11 @@ public class KitCost {
             return 0;
         }
 
-        String key = CustomItem.getCustomItemKey(item);
-        if (key != null) {
-            for (KitCustomItem customItem : KitCustomItem.values()) {
-                if (customItem.getItem().equals(key)) {
-                    return customItem.getCost();
+        String customKey = CustomItemConfig.getKey(item);
+        if (customKey != null) {
+            for (CustomItemConfig customItem : customItems) {
+                if (customItem.key().equals(customKey)) {
+                    return customItem.cost();
                 }
             }
         }
@@ -83,7 +84,7 @@ public class KitCost {
 
         if (item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta meta) {
             if (item.getType() == Material.TIPPED_ARROW) {
-                cost += 4;
+                cost += TIPPED_ARROW_COST;
             }
             for (KitPotion potion : KitPotion.values()) {
                 if (meta.getBasePotionType() == potion.getType()) {
@@ -105,7 +106,7 @@ public class KitCost {
         }
 
         if (item.getItemMeta().isUnbreakable()) {
-            cost += 100;
+            cost += UNBREAKABLE_COST;
         }
 
         return cost;

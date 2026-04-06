@@ -17,7 +17,7 @@ public class FoodSelectionGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         int slot = 0;
         for (KitItem item : KitItem.getItems(KitCategory.FOOD)) {
             ItemStack stack = new ItemStack(item.getItem());

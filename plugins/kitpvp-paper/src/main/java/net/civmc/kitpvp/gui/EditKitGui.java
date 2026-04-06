@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import net.civmc.kitpvp.KitPvpPlugin;
+import net.civmc.kitpvp.kit.KitItem;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.civmc.kitpvp.anvil.AnvilGui;
 import net.civmc.kitpvp.anvil.AnvilGuiListener;
 import net.civmc.kitpvp.gui.selection.ArmourSlotSelectionGui;
@@ -212,20 +215,27 @@ public class EditKitGui {
             }, 17);
         }
 
+        Set<Material> disabledMats = JavaPlugin.getPlugin(KitPvpPlugin.class).getDisabledItems()
+            .stream().map(KitItem::getItem).collect(Collectors.toSet());
+
         inventory.setSlot(getSlot(inventory, 39, Material.ORANGE_STAINED_GLASS_PANE, "Helmet",
-                () -> new ArmourSlotSelectionGui(dao, player, 39, kit, this, new ArrayList<>(MaterialTags.HELMETS.getValues()), List.of("meteoric_iron_helmet")).open()),
+                () -> new ArmourSlotSelectionGui(dao, player, 39, kit, this,
+                    MaterialTags.HELMETS.getValues().stream().filter(m -> !disabledMats.contains(m)).collect(Collectors.toCollection(ArrayList::new))).open()),
             10);
 
         inventory.setSlot(getSlot(inventory, 38, Material.ORANGE_STAINED_GLASS_PANE, "Chestplate",
-                () -> new ArmourSlotSelectionGui(dao, player, 38, kit, this, new ArrayList<>(MaterialTags.CHEST_EQUIPPABLE.getValues()), List.of("meteoric_iron_chestplate")).open()),
+                () -> new ArmourSlotSelectionGui(dao, player, 38, kit, this,
+                    MaterialTags.CHEST_EQUIPPABLE.getValues().stream().filter(m -> !disabledMats.contains(m)).collect(Collectors.toCollection(ArrayList::new))).open()),
             11);
 
         inventory.setSlot(getSlot(inventory, 37, Material.ORANGE_STAINED_GLASS_PANE, "Leggings",
-                () -> new ArmourSlotSelectionGui(dao, player, 37, kit, this, new ArrayList<>(MaterialTags.LEGGINGS.getValues()), List.of("meteoric_iron_leggings")).open()),
+                () -> new ArmourSlotSelectionGui(dao, player, 37, kit, this,
+                    MaterialTags.LEGGINGS.getValues().stream().filter(m -> !disabledMats.contains(m)).collect(Collectors.toCollection(ArrayList::new))).open()),
             12);
 
         inventory.setSlot(getSlot(inventory, 36, Material.ORANGE_STAINED_GLASS_PANE, "Boots",
-                () -> new ArmourSlotSelectionGui(dao, player, 36, kit, this, new ArrayList<>(MaterialTags.BOOTS.getValues()), List.of("meteoric_iron_boots")).open()),
+                () -> new ArmourSlotSelectionGui(dao, player, 36, kit, this,
+                    MaterialTags.BOOTS.getValues().stream().filter(m -> !disabledMats.contains(m)).collect(Collectors.toCollection(ArrayList::new))).open()),
             13);
 
         inventory.setSlot(getSlot(inventory, 40, Material.ORANGE_STAINED_GLASS_PANE, "Offhand",

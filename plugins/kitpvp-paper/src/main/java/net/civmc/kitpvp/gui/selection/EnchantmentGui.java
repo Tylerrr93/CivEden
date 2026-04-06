@@ -41,7 +41,7 @@ public class EnchantmentGui extends ItemSelectionGui {
     }
 
     @Override
-    public void addItems(ClickableInventory inventory) {
+    public void addItems(ClickableInventory inventory, int page) {
         ItemStack kitItem = kit.items()[this.slot].clone();
         if (!CustomItem.isCustomItem(kitItem)) {
             int slot = 0;
@@ -136,7 +136,7 @@ public class EnchantmentGui extends ItemSelectionGui {
                         @Override
                         public void onClose() {
                             JavaPlugin plugin = JavaPlugin.getProvidingPlugin(KitPvpPlugin.class);
-                            Bukkit.getScheduler().runTask(plugin, EnchantmentGui.this::open);
+                            Bukkit.getScheduler().runTask(plugin, () -> EnchantmentGui.this.open());
                         }
 
                         @Override

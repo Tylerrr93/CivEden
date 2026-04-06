@@ -12,3 +12,83 @@ database:
 
 max_arenas: -1
 ranked_arena: Plains
+
+kit:
+  max_points: 50
+  unbreakable_cost: 100
+  tipped_arrow_cost: 4
+  enchantment_costs:
+    PROTECTION: 1
+    SHARPNESS: 1
+    KNOCKBACK: 1
+    POWER: 1
+    THORNS: 1
+    SWIFT_SNEAK: 100
+    PIERCING: 1
+
+  # Vanilla KitItem names to hide from the kit editor GUI (e.g. DIAMOND_HELMET).
+  # Use KitItem enum names. Useful when a custom item replaces a vanilla tier.
+  disabled_items: []
+
+  # Custom items defined here will appear in the kit editor GUI and cost system.
+  # category options: ARMOUR, TOOL, BLOCK, FOOD
+  # armour_slot (ARMOUR only): HELMET, CHESTPLATE, LEGGINGS, BOOTS
+  # group: items sharing the same group name are placed in the same column in the GUI.
+  #        A new group always starts a new column. Omit to give the item its own column.
+  custom_items: []
+  # Example:
+  # custom_items:
+  #   - key: mithril_helmet
+  #     material: IRON_HELMET
+  #     display_name: "Mithril Helmet"
+  #     lore:
+  #       - "Forged from Eden mithril"
+  #     cost: 15
+  #     category: ARMOUR
+  #     armour_slot: HELMET
+  #     group: mithril
+  #     enchantments:
+  #       protection: 4
+  #       unbreaking: 3
+  #   - key: mithril_sword
+  #     material: IRON_SWORD
+  #     display_name: "Mithril Sword"
+  #     lore:
+  #       - "Forged from Eden mithril"
+  #     cost: 16
+  #     category: TOOL
+  #     group: mithril
+  #     enchantments:
+  #       sharpness: 5
+  #       knockback: 2
+
+ranked:
+  match_timeout_minutes: 10
+  max_height: 90
+  default_kit_name: Ranked
+  elo_k_factor: 32.0
+  recent_match_cooldown_seconds: 45
+  world_border:
+    center_x: 72.5
+    center_z: 72.5
+    initial_size: 143
+    final_size: 5
+    shrink_seconds: 480
+    damage_amount: 3.0
+  spawn1:
+    x: 42.5
+    y: 72.0
+    z: 33.5
+    yaw: -45.0
+    pitch: 0.0
+  spawn2:
+    x: 96.5
+    y: 72.0
+    z: 89.5
+    yaw: 135.0
+    pitch: 0.0
+  matchmaking:
+    initial_elo_gap: 200
+    gap_at_20s: 300
+    gap_at_40s: 400
+    gap_at_60s: 10000
