@@ -263,8 +263,9 @@ public class BlockBreakListener implements Listener {
         if (dropConfig.transformIfAble) {
             final List<ItemStack> transform = dropConfig.renderTransform(biomeName, dropTool);
             if (!transform.isEmpty()) {
-                doActualGenerate(transform, sourceLocation, player, dropName, blockName, blockConfig,
-                    alertBuffer, dropConfig);
+                // If doActualGenerate returns false, it meanns that it placed 0 blocks. Meaning it didnt generate anything >:(
+                // Without this change, it would just go on and return true resulting in an "empty" message being displayed (empty = "You found a hidden ore", just for clarification)
+                if(!doActualGenerate(transform, sourceLocation, player, dropName, blockName, blockConfig, alertBuffer, dropConfig)) return false;
             }
         }
 
@@ -323,8 +324,7 @@ public class BlockBreakListener implements Listener {
 
     }
 
-    private void doActualGenerate(final List<ItemStack> items, final Location sourceLocation, final Player player,
-                                  String dropName, String blockName, BlockConfig blockConfig, StringBuilder alertBuffer, DropConfig dropConfig) {
+    private boolean doActualGenerate(final List<ItemStack> items, final Location sourceLocation, final Player player, String dropName, String blockName, BlockConfig blockConfig, StringBuilder alertBuffer, DropConfig dropConfig) {
         int maxWalk = 0;
         int cPlace = 0;
         double cAttempt = 0;
@@ -376,12 +376,14 @@ public class BlockBreakListener implements Listener {
             }
 
             int placed = xform.getAmount() - cPlace;
-            if (placed < 1 && dropConfig.dropIfTransformFails) { // total failure.
+            if (placed < 1 && dropConfig.dropIfTransformFails) { // Placement failed, but its not a total failure since its going to be dropped
                 ItemStack toDrop = xform.clone();
                 toDrop.setAmount(Math.min(xform.getAmount(), dropConfig.maxDropsIfTransformFails));
                 final List<ItemStack> newDrops = new ArrayList<ItemStack>();
                 newDrops.add(toDrop);
                 doActualDrops(newDrops, sourceLocation, player, dropName, blockName, blockConfig, alertBuffer);
+                
+                return true;
             } else {
                 String name = xform.hasItemMeta() && xform.getItemMeta().hasDisplayName() ?
                     xform.getItemMeta().getDisplayName() : Config.getPrettyName(xform.getType().name());
@@ -390,7 +392,7 @@ public class BlockBreakListener implements Listener {
                     player.getDisplayName(), player.getLocation(), blockName,
                     placed, name, expressed);
 
-                // Anything to tell anyone about?
+                // Atleast 1 block got placed, so something actually happened
                 if (placed > 0 && Config.isAlertUser()) {
                     if (blockConfig.hasCustomPrefix(dropName)) {
                         // if this block has a custom prefix we alert immediately
@@ -405,9 +407,17 @@ public class BlockBreakListener implements Listener {
                             buildAlert(alertBuffer, null, name, placed, " nearby,");
                         }
                     }
+                    
+                    return true;
+                }
+                else { // The else here is actually wrong tbh, but since its for Eden and gets displayed anyway no need to check if Config.isAlertUser() is true
+                    // No block was placed, previously this check didnt exist so it would just return nothing and result in "You found a hidden ore" to be fired without actually finding something
+                	return false;
                 }
             }
         }
+        
+        return false;
     }
 
     private void buildAlert(StringBuilder alertBuilder, ItemStack item, String nameOverride, int amount, String postfix) {
