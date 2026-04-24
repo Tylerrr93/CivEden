@@ -1,7 +1,7 @@
-package net.edenciv.shortwave.listeners;
+package world.edenmc.shortwave.listeners;
 
-import net.edenciv.shortwave.ShortwavePlugin;
-import net.edenciv.shortwave.models.RadioTower;
+import world.edenmc.shortwave.ShortwavePlugin;
+import world.edenmc.shortwave.models.RadioTower;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

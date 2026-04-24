@@ -1,9 +1,9 @@
-package net.edenciv.shortwave.managers;
+package world.edenmc.shortwave.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.edenciv.shortwave.ShortwavePlugin;
+import world.edenmc.shortwave.ShortwavePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;

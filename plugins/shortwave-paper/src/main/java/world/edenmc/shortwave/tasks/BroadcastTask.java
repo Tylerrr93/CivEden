@@ -1,7 +1,7 @@
-package net.edenciv.shortwave.tasks;
+package world.edenmc.shortwave.tasks;
 
-import net.edenciv.shortwave.ShortwavePlugin;
-import net.edenciv.shortwave.models.RadioTower;
+import world.edenmc.shortwave.ShortwavePlugin;
+import world.edenmc.shortwave.models.RadioTower;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;

@@ -1,6 +1,6 @@
-package net.edenciv.shortwave.managers;
+package world.edenmc.shortwave.managers;
 
-import net.edenciv.shortwave.ShortwavePlugin;
+import world.edenmc.shortwave.ShortwavePlugin;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;

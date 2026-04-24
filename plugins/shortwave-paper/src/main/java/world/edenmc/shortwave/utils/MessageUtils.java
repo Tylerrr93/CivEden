@@ -1,4 +1,4 @@
-package net.edenciv.shortwave.utils;
+package world.edenmc.shortwave.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;

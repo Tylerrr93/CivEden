@@ -1,12 +1,12 @@
-package net.edenciv.shortwave;
+package world.edenmc.shortwave;
 
-import net.edenciv.shortwave.listeners.InteractionListener;
-import net.edenciv.shortwave.listeners.OxidationListener;
-import net.edenciv.shortwave.managers.ConfigManager;
-import net.edenciv.shortwave.managers.GUIManager;
-import net.edenciv.shortwave.managers.SpeakerManager;
-import net.edenciv.shortwave.managers.TowerManager;
-import net.edenciv.shortwave.tasks.BroadcastTask;
+import world.edenmc.shortwave.listeners.InteractionListener;
+import world.edenmc.shortwave.listeners.OxidationListener;
+import world.edenmc.shortwave.managers.ConfigManager;
+import world.edenmc.shortwave.managers.GUIManager;
+import world.edenmc.shortwave.managers.SpeakerManager;
+import world.edenmc.shortwave.managers.TowerManager;
+import world.edenmc.shortwave.tasks.BroadcastTask;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;

@@ -1,6 +1,6 @@
 name: Shortwave
 version: 2.0.0
-main: net.edenciv.shortwave.ShortwavePlugin
+main: world.edenmc.shortwave.ShortwavePlugin
 api-version: '1.21'
 author: EdenCiv
 description: Physical radio tower broadcasting system with Book & Quill content

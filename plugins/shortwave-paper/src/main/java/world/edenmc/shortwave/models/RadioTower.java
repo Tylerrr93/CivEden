@@ -1,6 +1,6 @@
-package net.edenciv.shortwave.models;
+package world.edenmc.shortwave.models;
 
-import net.edenciv.shortwave.ShortwavePlugin;
+import world.edenmc.shortwave.ShortwavePlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
