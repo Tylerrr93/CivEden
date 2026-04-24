@@ -1,7 +1,24 @@
 name: Shortwave
-version: ${version}
-main: com.github.longboyy.shortwave.ShortwavePlugin
-author: Longboyy
-description: Shortwave radio plugin
-api-version: 1.21
+version: 2.0.0
+main: net.edenciv.shortwave.ShortwavePlugin
+api-version: '1.21'
+author: EdenCiv
+description: Physical radio tower broadcasting system with Book & Quill content
 depend: [CivModCore, Citadel, NameLayer]
+
+commands:
+  shortwave:
+    description: Shortwave admin commands
+    usage: /shortwave <clearholograms>
+    permission: shortwave.admin
+
+permissions:
+  shortwave.use:
+    description: Allows basic radio usage
+    default: true
+  shortwave.build:
+    description: Allows building radio towers
+    default: true
+  shortwave.admin:
+    description: Allows admin commands for Shortwave
+    default: op

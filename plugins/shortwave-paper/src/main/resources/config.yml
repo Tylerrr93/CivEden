@@ -1,0 +1,290 @@
+# Shortwave Radio Plugin Configuration
+
+# ============================================
+# BROADCAST SETTINGS
+# ============================================
+
+# Default range for new towers (in blocks)
+# Players can upgrade this with range upgrade items
+default-tower-range: 500
+
+# How much garble (0-100) each competing tower on the same frequency adds.
+# Each additional in-range tower on the same frequency stacks this amount, capped at 90%.
+# Example: 2 competing towers at 25% each = 50% garble on top of oxidation.
+interference-garble-per-tower: 25
+
+# Frequency settings
+frequency:
+  # Minimum allowed frequency (inclusive)
+  min: 88.0
+  
+  # Maximum allowed frequency (inclusive)
+  max: 108.0
+  
+  # Number of decimal places (1 or 2)
+  # 1 = format like 104.5
+  # 2 = format like 104.53
+  decimal-places: 1
+
+# ============================================
+# FUEL SETTINGS
+# ============================================
+
+# Fuel item configuration
+# You can use any Minecraft item as fuel
+fuel:
+  # The item used as fuel
+  # Examples: COAL, CHARCOAL, BLAZE_ROD, LAVA_BUCKET, etc.
+  item: COAL
+  
+  # How long one fuel item lasts (in seconds)
+  # 600 seconds = 10 minutes
+  # 3600 seconds = 1 hour
+  # 86400 seconds = 24 hours
+  duration-seconds: 600
+  
+  # Display name for fuel in GUI (supports color codes with &)
+  display-name: "&6Coal Fuel"
+  
+# Alternate fuel items (optional)
+# Players can use any of these as fuel with different durations
+alternate-fuels:
+  CHARCOAL:
+    duration-seconds: 600
+    display-name: "&6Charcoal Fuel"
+  BLAZE_ROD:
+    duration-seconds: 1800  # 30 minutes
+    display-name: "&eBlaze Rod Fuel"
+  LAVA_BUCKET:
+    duration-seconds: 7200  # 2 hours
+    display-name: "&cLava Bucket Fuel"
+
+# ============================================
+# RECEIVER SETTINGS
+# ============================================
+
+# Radio receiver item configuration
+receiver:
+  # The item used as a handheld radio
+  # Examples: RECOVERY_COMPASS, COMPASS, CLOCK, SPYGLASS, etc.
+  item: RECOVERY_COMPASS
+  
+  # Display name when tuned (supports color codes)
+  # {frequency} will be replaced with actual frequency
+  display-name: "&6Radio [{frequency}]"
+  
+  # Lore (description) shown on tuned radios
+  lore:
+    - "&7Tuned to frequency {frequency}"
+    - "&7Hold to receive broadcasts"
+    - "&8Right-click to retune"
+
+# ============================================
+# RANGE UPGRADE SETTINGS
+# ============================================
+
+# Range upgrade system - Players must upgrade through each tier sequentially
+# Each tier requires the previous tier to be unlocked
+# Format for each tier:
+#   tier-X:
+#     material: BLOCK_TYPE (what item is needed)
+#     range: NUMBER (broadcast range in blocks)
+#     cost: NUMBER (how many blocks required)
+#     display-name: "Name" (shown in GUI)
+
+range-upgrades:
+  # Tier 1 - Starting tier (free, default)
+  tier-1:
+    material: CHISELED_COPPER
+    range: 500
+    cost: 0
+    display-name: "&7Basic Tier"
+
+  # Tier 2 - Iron upgrade
+  tier-2:
+    material: IRON_BLOCK
+    range: 1000
+    cost: 3
+    display-name: "&7Iron Tier"
+
+  # Tier 3 - Gold upgrade
+  tier-3:
+    material: GOLD_BLOCK
+    range: 2500
+    cost: 5
+    display-name: "&eGold Tier"
+
+  # Tier 4 - Diamond upgrade
+  tier-4:
+    material: DIAMOND_BLOCK
+    range: 5000
+    cost: 7
+    display-name: "&bDiamond Tier"
+
+  # Tier 5 - Netherite upgrade
+  tier-5:
+    material: NETHERITE_BLOCK
+    range: 10000
+    cost: 9
+    display-name: "&5Netherite Tier"
+
+  # Tier 6 - Emerald upgrade (optional endgame tier)
+  tier-6:
+    material: EMERALD_BLOCK
+    range: 20000
+    cost: 12
+    display-name: "&aEmerald Tier"
+
+# ============================================
+# BROADCAST LINE SETTINGS
+# ============================================
+
+# Separate upgrade path for how many lines broadcast per cycle.
+# Players upgrade this independently of range through the tower GUI.
+# Level 1 is the default. Add or remove levels freely (max 6 lines enforced in code).
+broadcast-line-upgrades:
+  level-1:
+    lines: 1
+    cost: 0
+    material: CHISELED_COPPER
+    display-name: "&7Basic (1 Line)"
+  level-2:
+    lines: 2
+    cost: 3
+    material: IRON_BLOCK
+    display-name: "&7Standard (2 Lines)"
+  level-3:
+    lines: 3
+    cost: 5
+    material: GOLD_BLOCK
+    display-name: "&eEnhanced (3 Lines)"
+  level-4:
+    lines: 4
+    cost: 7
+    material: DIAMOND_BLOCK
+    display-name: "&bPremium (4 Lines)"
+  level-5:
+    lines: 5
+    cost: 9
+    material: NETHERITE_BLOCK
+    display-name: "&5Elite (5 Lines)"
+  level-6:
+    lines: 6
+    cost: 12
+    material: EMERALD_BLOCK
+    display-name: "&aMax (6 Lines)"
+
+# ============================================
+# BROADCAST INTERVAL SETTINGS
+# ============================================
+
+# Upgrade tiers that unlock faster broadcast speeds.
+# interval-seconds is the MINIMUM (fastest) interval available at that tier.
+# Players can configure any interval from their unlocked minimum up to 300 seconds.
+# Tiers must be listed from slowest to fastest (highest to lowest interval-seconds).
+broadcast-interval-upgrades:
+  tier-1:
+    interval-seconds: 45
+    cost: 0
+    material: CHISELED_COPPER
+    display-name: "&7Standard (45s min)"
+  tier-2:
+    interval-seconds: 30
+    cost: 3
+    material: IRON_BLOCK
+    display-name: "&7Fast (30s min)"
+  tier-3:
+    interval-seconds: 20
+    cost: 5
+    material: GOLD_BLOCK
+    display-name: "&eFaster (20s min)"
+  tier-4:
+    interval-seconds: 10
+    cost: 7
+    material: DIAMOND_BLOCK
+    display-name: "&bFastest (10s min)"
+
+# ============================================
+# JINGLE SETTINGS
+# ============================================
+
+# Station jingles (sound branding)
+# Players can select these sounds to play before broadcasts
+# Add as many as you want!
+jingles:
+  the-alert:
+    sound: BLOCK_BELL_USE
+    display-name: "&6The Alert"
+    description: "Classic bell ding"
+  the-tech:
+    sound: BLOCK_BEACON_ACTIVATE
+    display-name: "&bThe Tech"
+    description: "Futuristic beacon hum"
+  the-magic:
+    sound: BLOCK_AMETHYST_BLOCK_CHIME
+    display-name: "&dThe Magic"
+    description: "Mystical amethyst chime"
+  the-classic:
+    sound: BLOCK_NOTE_BLOCK_PLING
+    display-name: "&eThe Classic"
+    description: "Note block pling"
+  the-retro:
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP
+    display-name: "&aThe Retro"
+    description: "XP orb pickup sound"
+  the-heavy:
+    sound: BLOCK_ANVIL_LAND
+    display-name: "&7The Heavy"
+    description: "Anvil impact"
+  the-victory:
+    sound: ENTITY_PLAYER_LEVELUP
+    display-name: "&6The Victory"
+    description: "Level up sound"
+
+# Default jingle for new towers
+default-jingle: BLOCK_BELL_USE
+
+# ============================================
+# OXIDATION SETTINGS
+# ============================================
+
+# Chance (0.0 to 1.0) that a natural oxidation attempt on tower copper is cancelled.
+# Higher values = slower oxidation. 0.0 = vanilla speed, 1.0 = never oxidizes.
+# Default 0.98: oxidizes at roughly 2% of vanilla speed — very slowly over time.
+tower-oxidation-cancel-chance: 0.98
+
+# ============================================
+# GUI SETTINGS
+# ============================================
+
+# GUI customization
+gui:
+  # Tower management GUI title
+  tower-gui-title: "&6&l📻 Radio Tower Control"
+  
+  # Fuel GUI title
+  fuel-gui-title: "&6&l⛽ Tower Fuel Management"
+  
+  # Jingle selection GUI title
+  jingle-gui-title: "&6&l🎵 Select Station Jingle"
+  
+  # Range upgrade GUI title
+  upgrade-gui-title: "&6&l⚡ Tower Range Upgrade"
+
+  # Broadcast line upgrade GUI title
+  broadcast-line-gui-title: "&6&l📄 Broadcast Lines"
+
+  # Broadcast interval upgrade GUI title
+  broadcast-interval-gui-title: "&6&l⏱ Broadcast Interval"
+
+# ============================================
+# ADVANCED SETTINGS
+# ============================================
+
+# Enable debug messages in console
+debug: false
+
+# Save interval for tower data (in ticks)
+# 6000 ticks = 5 minutes
+# Lower = more frequent saves but more disk I/O
+auto-save-interval-ticks: 6000
