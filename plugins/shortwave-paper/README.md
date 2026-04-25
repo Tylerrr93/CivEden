@@ -78,7 +78,7 @@ Right-click a Recovery Compass to tune it. You'll type a frequency in chat. Once
 
 Place any copper block on the ground and a Decorated Pot on top. Right-click the pot and type a frequency to tune it. When a tower on that frequency broadcasts and you're nearby, a hologram text display appears above the speaker for 5 seconds.
 
-Speakers only work when their chunk is loaded. If nobody is around, they don't fire. That's intentional.
+Speakers only work when their chunk is loaded. 
 
 ### Reinforcement and Access
 
