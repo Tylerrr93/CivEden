@@ -16,28 +16,26 @@ import vg.civcraft.mc.civmodcore.inventory.gui.Clickable;
 import vg.civcraft.mc.civmodcore.inventory.gui.ClickableInventory;
 import vg.civcraft.mc.civmodcore.inventory.gui.DecorationStack;
 
+import vg.civcraft.mc.civmodcore.utilities.cooldowns.MilliSecCoolDownHandler;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class GUIManager {
 
     private final ShortwavePlugin plugin;
-    private final Map<UUID, Long> clickCooldowns = new ConcurrentHashMap<>();
-    private static final long CLICK_COOLDOWN_MS = 300;
+    private final MilliSecCoolDownHandler<UUID> clickCooldown = new MilliSecCoolDownHandler<>(300);
 
     public GUIManager(ShortwavePlugin plugin) {
         this.plugin = plugin;
     }
 
     private boolean isOnCooldown(Player player) {
-        long now = System.currentTimeMillis();
-        Long last = clickCooldowns.get(player.getUniqueId());
-        if (last != null && now - last < CLICK_COOLDOWN_MS) return true;
-        clickCooldowns.put(player.getUniqueId(), now);
+        if (clickCooldown.onCoolDown(player.getUniqueId())) return true;
+        clickCooldown.putOnCoolDown(player.getUniqueId());
         return false;
     }
 

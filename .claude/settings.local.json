@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :plugins:shortwave-paper:build --quiet)"
+    ]
+  }
+}

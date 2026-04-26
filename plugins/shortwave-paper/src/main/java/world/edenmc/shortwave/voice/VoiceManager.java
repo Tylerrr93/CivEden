@@ -56,6 +56,8 @@ public class VoiceManager implements VoicechatPlugin {
     private final Map<String, String> speakerFrequencies = new ConcurrentHashMap<>();
     // Speaker copper-block location key → last System.currentTimeMillis() audio was sent to it
     private final Map<String, Long> speakerLastAudioTime = new ConcurrentHashMap<>();
+    // Receiver player UUID → persistent static audio channel (reused across packets, same as speaker pattern)
+    private final Map<UUID, StaticAudioChannel> listenerChannels = new ConcurrentHashMap<>();
 
     // Refreshed on the main thread every broadcast tick; consumed from the SVC async thread.
     // Using volatile references to ConcurrentHashMaps gives a safe consistent snapshot.
@@ -144,15 +146,21 @@ public class VoiceManager implements VoicechatPlugin {
             if (receiverLoc == null || !tower.isInRange(receiverLoc)) continue;
 
             VoicechatConnection conn = serverApi.getConnectionOf(receiverUUID);
-            if (conn == null) continue;
-
-            // StaticAudioChannel delivers audio privately to a single player at fixed volume
-            ServerLevel level = serverApi.fromServerLevel(receiverLoc.getWorld());
-            StaticAudioChannel ch = serverApi.createStaticAudioChannel(UUID.randomUUID(), level, conn);
-            if (ch != null) {
-                ch.setCategory(RADIO_CATEGORY);
-                ch.send(opusData);
+            if (conn == null) {
+                listenerChannels.remove(receiverUUID);
+                continue;
             }
+
+            // Reuse a persistent channel per receiver — same pattern as speaker blocks.
+            // Creating a new StaticAudioChannel every packet breaks the audio stream.
+            StaticAudioChannel ch = listenerChannels.computeIfAbsent(receiverUUID, id -> {
+                ServerLevel lvl = serverApi.fromServerLevel(receiverLoc.getWorld());
+                StaticAudioChannel newCh = serverApi.createStaticAudioChannel(UUID.randomUUID(), lvl, conn);
+                if (newCh != null) newCh.setCategory(RADIO_CATEGORY);
+                return newCh;
+            });
+
+            if (ch != null) ch.send(opusData);
         }
     }
 
@@ -321,6 +329,7 @@ public class VoiceManager implements VoicechatPlugin {
         speakerChannels.clear();
         speakerFrequencies.clear();
         speakerLastAudioTime.clear();
+        listenerChannels.clear();
         playerLocationCache = new ConcurrentHashMap<>();
         playerRadioFreqCache = new ConcurrentHashMap<>();
     }
