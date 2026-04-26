@@ -5,6 +5,7 @@ api-version: '1.21'
 author: EdenCiv
 description: Physical radio tower broadcasting system with Book & Quill content
 depend: [CivModCore, Citadel, NameLayer]
+softdepend: [voicechat]
 
 commands:
   shortwave:

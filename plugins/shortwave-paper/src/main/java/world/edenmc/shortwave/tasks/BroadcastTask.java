@@ -32,6 +32,11 @@ public class BroadcastTask extends BukkitRunnable {
     
     @Override
     public void run() {
+        // Refresh voice caches on the main thread so the SVC async thread can use them safely
+        if (plugin.getVoiceManager() != null) {
+            plugin.getVoiceManager().refreshPlayerCaches();
+        }
+
         for (RadioTower tower : plugin.getTowerManager().getActiveTowers()) {
             if (!tower.isReadyToBroadcast()) continue;
             try {

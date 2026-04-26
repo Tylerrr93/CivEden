@@ -30,11 +30,15 @@ public class SpeakerManager {
     public void tuneSpeaker(Location copperLocation, String frequency) {
         speakers.put(locationToKey(copperLocation), new SpeakerEntry(copperLocation, frequency));
         save();
+        var vm = plugin.getVoiceManager();
+        if (vm != null) vm.registerSpeaker(copperLocation, frequency);
     }
 
     public void removeSpeaker(Location copperLocation) {
         if (speakers.remove(locationToKey(copperLocation)) != null) {
             save();
+            var vm = plugin.getVoiceManager();
+            if (vm != null) vm.unregisterSpeaker(copperLocation);
         }
     }
 
@@ -53,6 +57,16 @@ public class SpeakerManager {
             }
         }
         return result;
+    }
+
+    /** Returns a snapshot of all registered speakers (copper location → frequency). */
+    public java.util.Map<Location, String> getSpeakersSnapshot() {
+        java.util.Map<Location, String> snapshot = new java.util.HashMap<>();
+        for (SpeakerEntry entry : speakers.values()) {
+            Location loc = entry.toLocation();
+            if (loc != null) snapshot.put(loc, entry.frequency);
+        }
+        return snapshot;
     }
 
     public void save() {

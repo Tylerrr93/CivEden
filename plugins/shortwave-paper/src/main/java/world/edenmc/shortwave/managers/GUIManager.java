@@ -15,18 +15,41 @@ import org.bukkit.metadata.FixedMetadataValue;
 import vg.civcraft.mc.civmodcore.inventory.gui.Clickable;
 import vg.civcraft.mc.civmodcore.inventory.gui.ClickableInventory;
 import vg.civcraft.mc.civmodcore.inventory.gui.DecorationStack;
-import vg.civcraft.mc.civmodcore.inventory.gui.LClickable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public class GUIManager {
 
     private final ShortwavePlugin plugin;
+    private final Map<UUID, Long> clickCooldowns = new ConcurrentHashMap<>();
+    private static final long CLICK_COOLDOWN_MS = 300;
 
     public GUIManager(ShortwavePlugin plugin) {
         this.plugin = plugin;
+    }
+
+    private boolean isOnCooldown(Player player) {
+        long now = System.currentTimeMillis();
+        Long last = clickCooldowns.get(player.getUniqueId());
+        if (last != null && now - last < CLICK_COOLDOWN_MS) return true;
+        clickCooldowns.put(player.getUniqueId(), now);
+        return false;
+    }
+
+    private Clickable makeButton(ItemStack item, Consumer<Player> action) {
+        return new Clickable(item) {
+            @Override protected void clicked(Player p) { if (!isOnCooldown(p)) action.accept(p); }
+            @Override protected void onDoubleClick(Player p) {}
+            @Override protected void onRightClick(Player p) {}
+            @Override protected void onMiddleClick(Player p) {}
+            @Override protected void onDrop(Player p) {}
+            @Override protected void onControlDrop(Player p) {}
+        };
     }
 
     public void openTowerGUI(Player player, RadioTower tower) {
@@ -38,18 +61,41 @@ public class GUIManager {
                 new FixedMetadataValue(plugin, tower.getCopperLocation()));
 
         gui.setSlot(new DecorationStack(createTowerInfoItem(tower)), 4);
-        gui.setSlot(new LClickable(createFuelManagementItem(tower), p -> openFuelGUI(p, tower)), 10);
-        gui.setSlot(new LClickable(createJingleSelectionItem(), p -> openJingleGUI(p, tower)), 12);
-        gui.setSlot(new LClickable(createRangeUpgradeItem(tower), p -> openRangeUpgradeGUI(p, tower)), 14);
-        gui.setSlot(new LClickable(createFrequencyItem(tower), p -> {
+        gui.setSlot(makeButton(createFuelManagementItem(tower), p -> openFuelGUI(p, tower)), 10);
+        gui.setSlot(makeButton(createJingleSelectionItem(), p -> openJingleGUI(p, tower)), 12);
+        gui.setSlot(makeButton(createRangeUpgradeItem(tower), p -> openRangeUpgradeGUI(p, tower)), 14);
+        gui.setSlot(makeButton(createFrequencyItem(tower), p -> {
             p.closeInventory();
             p.sendMessage(Component.text("Enter new frequency (e.g., 104.5) in chat:", NamedTextColor.YELLOW));
             p.setMetadata("shortwave_pending_frequency",
                     new FixedMetadataValue(plugin, tower.getCopperLocation()));
         }), 16);
-        gui.setSlot(new LClickable(createBroadcastIntervalItem(tower), p -> openBroadcastIntervalGUI(p, tower)), 20);
-        gui.setSlot(new LClickable(createBroadcastLineItem(tower), p -> openBroadcastLineGUI(p, tower)), 22);
-        gui.setSlot(new LClickable(createCloseButton(), p -> {
+        gui.setSlot(makeButton(createBroadcastIntervalItem(tower), p -> openBroadcastIntervalGUI(p, tower)), 20);
+        gui.setSlot(makeButton(createBroadcastLineItem(tower), p -> openBroadcastLineGUI(p, tower)), 22);
+
+        // Voice toggle — only shown when SimpleVoiceChat is installed
+        if (plugin.getVoiceManager() != null) {
+            gui.setSlot(makeButton(createVoiceToggleItem(tower), p -> {
+                // Capture new state once so every reference in this handler is consistent
+                boolean nowEnabled = !tower.isVoiceEnabled();
+                tower.setVoiceEnabled(nowEnabled);
+                plugin.getTowerManager().saveTowers();
+
+                // Always send a chat message — definitive feedback visible to the player
+                // regardless of any GUI timing quirks.
+                p.sendMessage(Component.text(
+                        "Voice mode " + (nowEnabled ? "enabled" : "disabled")
+                                + " on frequency " + tower.getFrequency() + ".",
+                        nowEnabled ? NamedTextColor.GREEN : NamedTextColor.GRAY));
+
+                // Pitch-shifted pling: high = on, low = off.
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, nowEnabled ? 1.5f : 0.8f);
+
+                openTowerGUI(p, tower);
+            }), 24);
+        }
+
+        gui.setSlot(makeButton(createCloseButton(), p -> {
             p.closeInventory();
             p.removeMetadata("shortwave_tower_location", plugin);
         }), 26);
@@ -77,7 +123,7 @@ public class GUIManager {
             gui.setSlot(createFuelClickable(entry.getKey(), entry.getValue().duration, tower), slot++);
         }
 
-        gui.setSlot(new LClickable(createBackButton(), p -> openTowerGUI(p, tower)), 45);
+        gui.setSlot(makeButton(createBackButton(), p -> openTowerGUI(p, tower)), 45);
 
         DecorationStack border = new DecorationStack(createGlassPane());
         for (int i : new int[]{0,1,2,3,5,6,7,8,9,17,18,26,27,35,36,44,46,47,48,49,50,51,52,53}) {
@@ -98,7 +144,7 @@ public class GUIManager {
         for (ConfigManager.JingleConfig jingle : jingles) {
             if (slotIndex >= slots.length) break;
             Sound sound = jingle.sound;
-            gui.setSlot(new LClickable(createJingleItem(jingle), p -> {
+            gui.setSlot(makeButton(createJingleItem(jingle), p -> {
                 tower.setJingle(sound);
                 plugin.getTowerManager().saveTowers();
                 p.playSound(p.getLocation(), sound, 1.0f, 1.0f);
@@ -107,7 +153,7 @@ public class GUIManager {
             }), slots[slotIndex++]);
         }
 
-        gui.setSlot(new LClickable(createBackButton(), p -> openTowerGUI(p, tower)), 22);
+        gui.setSlot(makeButton(createBackButton(), p -> openTowerGUI(p, tower)), 22);
 
         DecorationStack border = new DecorationStack(createGlassPane());
         for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,20,21,23,24,25,26}) {
@@ -130,13 +176,13 @@ public class GUIManager {
 
         if (nextUpgrade != null) {
             gui.setSlot(new DecorationStack(createUpgradeArrow()), 13);
-            gui.setSlot(new LClickable(createNextTierItem(nextUpgrade), p -> performUpgrade(p, tower)), 15);
+            gui.setSlot(makeButton(createNextTierItem(nextUpgrade), p -> performUpgrade(p, tower)), 15);
         } else {
             gui.setSlot(new DecorationStack(createMaxTierItem()), 13);
         }
 
         gui.setSlot(new DecorationStack(createTierInfoItem(currentUpgrade, nextUpgrade)), 22);
-        gui.setSlot(new LClickable(createBackButton(), p -> openTowerGUI(p, tower)), 18);
+        gui.setSlot(makeButton(createBackButton(), p -> openTowerGUI(p, tower)), 18);
 
         DecorationStack border = new DecorationStack(createGlassPane());
         for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,10,12,14,16,17,19,20,21,23,24,25,26}) {
@@ -150,18 +196,24 @@ public class GUIManager {
         return new Clickable(createFuelClickableItem(material, durationSeconds)) {
             @Override
             public void clicked(Player p) {
-                consumeFuel(p, tower, material, durationSeconds, false);
+                if (!isOnCooldown(p)) consumeFuel(p, tower, material, durationSeconds, false);
             }
 
             @Override
             protected void onShiftLeftClick(Player p) {
-                consumeFuel(p, tower, material, durationSeconds, true);
+                if (!isOnCooldown(p)) consumeFuel(p, tower, material, durationSeconds, true);
             }
 
             @Override
             protected void onShiftRightClick(Player p) {
-                consumeFuel(p, tower, material, durationSeconds, true);
+                if (!isOnCooldown(p)) consumeFuel(p, tower, material, durationSeconds, true);
             }
+
+            @Override protected void onDoubleClick(Player p) {}
+            @Override protected void onRightClick(Player p) {}
+            @Override protected void onMiddleClick(Player p) {}
+            @Override protected void onDrop(Player p) {}
+            @Override protected void onControlDrop(Player p) {}
         };
     }
 
@@ -550,13 +602,13 @@ public class GUIManager {
         gui.setSlot(new DecorationStack(createBroadcastLinesTierItem(unlocked)), 4);
 
         // Row 1: configure controls
-        gui.setSlot(new LClickable(createDecreaseLinesButton(selected), p -> {
+        gui.setSlot(makeButton(createDecreaseLinesButton(selected), p -> {
             tower.setBroadcastLinesSelected(selected - 1);
             plugin.getTowerManager().saveTowers();
             openBroadcastLineGUI(p, tower);
         }), 11);
         gui.setSlot(new DecorationStack(createSelectedLinesDisplay(selected, unlocked)), 13);
-        gui.setSlot(new LClickable(createIncreaseLinesButton(selected, unlocked), p -> {
+        gui.setSlot(makeButton(createIncreaseLinesButton(selected, unlocked), p -> {
             tower.setBroadcastLinesSelected(selected + 1);
             plugin.getTowerManager().saveTowers();
             openBroadcastLineGUI(p, tower);
@@ -564,13 +616,13 @@ public class GUIManager {
 
         // Row 2: upgrade path
         if (nextUpgrade != null) {
-            gui.setSlot(new LClickable(createNextBroadcastLineItem(nextUpgrade),
+            gui.setSlot(makeButton(createNextBroadcastLineItem(nextUpgrade),
                     p -> performBroadcastLineUpgrade(p, tower)), 22);
         } else {
             gui.setSlot(new DecorationStack(createMaxBroadcastLineItem()), 22);
         }
 
-        gui.setSlot(new LClickable(createBackButton(), p -> openTowerGUI(p, tower)), 18);
+        gui.setSlot(makeButton(createBackButton(), p -> openTowerGUI(p, tower)), 18);
 
         DecorationStack border = new DecorationStack(createGlassPane());
         for (int i : new int[]{0,1,2,3,5,6,7,8,9,10,12,14,16,17,19,20,21,23,24,25,26}) {
@@ -774,13 +826,13 @@ public class GUIManager {
         gui.setSlot(new DecorationStack(createBroadcastIntervalTierItem(unlocked)), 4);
 
         // Row 1: configure controls (left = faster = fewer seconds, right = slower = more seconds)
-        gui.setSlot(new LClickable(createFasterButton(selected, unlocked), p -> {
+        gui.setSlot(makeButton(createFasterButton(selected, unlocked), p -> {
             tower.setBroadcastIntervalSelected(selected - 5);
             plugin.getTowerManager().saveTowers();
             openBroadcastIntervalGUI(p, tower);
         }), 11);
         gui.setSlot(new DecorationStack(createSelectedIntervalDisplay(selected, unlocked)), 13);
-        gui.setSlot(new LClickable(createSlowerButton(selected), p -> {
+        gui.setSlot(makeButton(createSlowerButton(selected), p -> {
             tower.setBroadcastIntervalSelected(selected + 5);
             plugin.getTowerManager().saveTowers();
             openBroadcastIntervalGUI(p, tower);
@@ -788,13 +840,13 @@ public class GUIManager {
 
         // Row 2: upgrade path
         if (nextUpgrade != null) {
-            gui.setSlot(new LClickable(createNextBroadcastIntervalItem(nextUpgrade),
+            gui.setSlot(makeButton(createNextBroadcastIntervalItem(nextUpgrade),
                     p -> performBroadcastIntervalUpgrade(p, tower)), 22);
         } else {
             gui.setSlot(new DecorationStack(createMinIntervalReachedItem()), 22);
         }
 
-        gui.setSlot(new LClickable(createBackButton(), p -> openTowerGUI(p, tower)), 18);
+        gui.setSlot(makeButton(createBackButton(), p -> openTowerGUI(p, tower)), 18);
 
         DecorationStack border = new DecorationStack(createGlassPane());
         for (int i : new int[]{0,1,2,3,5,6,7,8,9,10,12,14,16,17,19,20,21,23,24,25,26}) {
@@ -977,6 +1029,36 @@ public class GUIManager {
                 .decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
         meta.setEnchantmentGlintOverride(true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createVoiceToggleItem(RadioTower tower) {
+        boolean on = tower.isVoiceEnabled();
+        ItemStack item = new ItemStack(on ? Material.JUKEBOX : Material.NOTE_BLOCK);
+        ItemMeta meta = item.getItemMeta();
+        if (on) {
+            meta.displayName(Component.text("🎙 Voice Mode: ON", NamedTextColor.GREEN)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .decoration(TextDecoration.BOLD, true));
+            meta.setEnchantmentGlintOverride(true);
+        } else {
+            meta.displayName(Component.text("🎙 Voice Mode: OFF", NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text(on
+                        ? "Players near this tower can transmit"
+                        : "Enable to allow voice transmission",
+                on ? NamedTextColor.YELLOW : NamedTextColor.DARK_GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("via SimpleVoiceChat.", NamedTextColor.DARK_GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.empty());
+        lore.add(Component.text("Click to toggle " + (on ? "OFF" : "ON"),
+                on ? NamedTextColor.RED : NamedTextColor.GREEN)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
         item.setItemMeta(meta);
         return item;
     }

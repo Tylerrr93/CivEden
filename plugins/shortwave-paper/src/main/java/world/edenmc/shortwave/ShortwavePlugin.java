@@ -7,6 +7,8 @@ import world.edenmc.shortwave.managers.GUIManager;
 import world.edenmc.shortwave.managers.SpeakerManager;
 import world.edenmc.shortwave.managers.TowerManager;
 import world.edenmc.shortwave.tasks.BroadcastTask;
+import world.edenmc.shortwave.tasks.ParticleTask;
+import world.edenmc.shortwave.voice.VoiceManager;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -31,7 +33,9 @@ public class ShortwavePlugin extends JavaPlugin {
     private GUIManager guiManager;
     private SpeakerManager speakerManager;
     private BroadcastTask broadcastTask;
+    private ParticleTask particleTask;
     private PermissionType useRadioPermission;
+    private VoiceManager voiceManager;
     
     @Override
     public void onEnable() {
@@ -78,6 +82,15 @@ public class ShortwavePlugin extends JavaPlugin {
         // Clean up any holograms left over from a previous server session
         Bukkit.getScheduler().runTaskLater(this, this::cleanupStuckHolograms, 1L);
 
+        // SimpleVoiceChat — soft dependency: only load if the plugin is present.
+        // VoiceManager class references SVC API classes, so we must not touch it if SVC is absent.
+        if (getServer().getPluginManager().getPlugin("voicechat") != null) {
+            setupVoiceChat();
+            // 4-tick particle loop for tower "on-air" and speaker audio indicators
+            this.particleTask = new ParticleTask(this);
+            particleTask.runTaskTimer(this, 4L, 4L);
+        }
+
         getLogger().info("Shortwave Radio Plugin enabled!");
         getLogger().info("Broadcast task running every second (per-tower intervals apply)");
         getLogger().info("Default tower range: " + configManager.getDefaultRange() + " blocks");
@@ -90,6 +103,14 @@ public class ShortwavePlugin extends JavaPlugin {
             broadcastTask.cancel();
         }
         
+        // Shut down voice relay and particles
+        if (particleTask != null) {
+            particleTask.cancel();
+        }
+        if (voiceManager != null) {
+            voiceManager.shutdown();
+        }
+
         // Save towers and speakers to disk
         if (towerManager != null) {
             towerManager.saveTowers();
@@ -119,6 +140,22 @@ public class ShortwavePlugin extends JavaPlugin {
 
     public SpeakerManager getSpeakerManager() {
         return speakerManager;
+    }
+
+    /** Null if SimpleVoiceChat is not installed or not yet started. */
+    public VoiceManager getVoiceManager() {
+        return voiceManager;
+    }
+
+    /** Called only when the voicechat plugin is confirmed present — keeps SVC classes isolated. */
+    private void setupVoiceChat() {
+        voiceManager = new VoiceManager(this);
+        if (voiceManager.tryRegister()) {
+            getLogger().info("SimpleVoiceChat detected — voice relay enabled.");
+        } else {
+            getLogger().warning("SimpleVoiceChat present but BukkitVoicechatService not available; voice relay disabled.");
+            voiceManager = null;
+        }
     }
     
     @Override

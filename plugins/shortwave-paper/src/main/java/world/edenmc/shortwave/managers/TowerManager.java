@@ -186,6 +186,7 @@ public class TowerManager {
         int broadcastIntervalSelected;
         List<String> cachedPages;
         String cachedOxidation;
+        boolean voiceEnabled;
 
         TowerData(RadioTower tower) {
             Location loc = tower.getCopperLocation();
@@ -204,6 +205,7 @@ public class TowerManager {
             this.broadcastIntervalSelected = tower.getBroadcastIntervalSelected();
             this.cachedPages = tower.getCachedPages();
             this.cachedOxidation = tower.getCachedOxidation().name();
+            this.voiceEnabled = tower.isVoiceEnabled();
         }
 
         RadioTower toTower() {
@@ -215,7 +217,7 @@ public class TowerManager {
             return new RadioTower(loc, frequency, fuelEndTime, currentPage, jingle, range,
                     broadcastLinesUnlocked, broadcastLinesSelected,
                     broadcastIntervalUnlocked, broadcastIntervalSelected,
-                    cachedPages, cachedOxidation);
+                    cachedPages, cachedOxidation, voiceEnabled);
         }
     }
 }

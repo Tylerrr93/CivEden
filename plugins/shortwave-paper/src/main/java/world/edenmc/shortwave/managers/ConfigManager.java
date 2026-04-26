@@ -420,6 +420,16 @@ public class ConfigManager {
         return plugin.getConfig().getInt("interference-garble-per-tower", 25);
     }
 
+    /** Blocks from the tower base copper within which a player can transmit voice. */
+    public double getVoiceTransmitterRange() {
+        return plugin.getConfig().getDouble("voice.transmitter-range", 5.0);
+    }
+
+    /** Block radius from a speaker block within which players can hear relayed voice audio. */
+    public int getSpeakerAudioRange() {
+        return plugin.getConfig().getInt("voice.speaker-audio-range", 32);
+    }
+
     public double getOxidationCancelChance() {
         return plugin.getConfig().getDouble("tower-oxidation-cancel-chance", 0.98);
     }

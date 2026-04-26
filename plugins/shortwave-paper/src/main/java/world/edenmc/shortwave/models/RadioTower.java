@@ -24,6 +24,7 @@ public class RadioTower {
     private int broadcastLinesSelected;
     private int broadcastIntervalUnlocked;
     private int broadcastIntervalSelected;
+    private boolean voiceEnabled;
     private transient long lastBroadcastTime;
 
     // Cached state — updated by events and on GUI open, read by the broadcast task.
@@ -43,6 +44,7 @@ public class RadioTower {
         this.broadcastLinesSelected = 1;
         this.broadcastIntervalUnlocked = 45;
         this.broadcastIntervalSelected = 45;
+        this.voiceEnabled = false;
         this.cachedPages = new ArrayList<>();
         this.cachedOxidation = OxidationLevel.UNAFFECTED;
         this.structureIntact = true;
@@ -53,7 +55,7 @@ public class RadioTower {
                       String jingleName, int range,
                       int broadcastLinesUnlocked, int broadcastLinesSelected,
                       int broadcastIntervalUnlocked, int broadcastIntervalSelected,
-                      List<String> cachedPages, String cachedOxidationName) {
+                      List<String> cachedPages, String cachedOxidationName, boolean voiceEnabled) {
         this.copperLocation = copperLocation;
         this.frequency = frequency;
         this.fuelEndTime = fuelEndTime;
@@ -78,6 +80,7 @@ public class RadioTower {
         } catch (IllegalArgumentException e) {
             this.cachedOxidation = OxidationLevel.UNAFFECTED;
         }
+        this.voiceEnabled = voiceEnabled;
         this.structureIntact = true;
     }
 
@@ -142,6 +145,14 @@ public class RadioTower {
 
     public void setRange(int range) {
         this.range = range;
+    }
+
+    public boolean isVoiceEnabled() {
+        return voiceEnabled;
+    }
+
+    public void setVoiceEnabled(boolean voiceEnabled) {
+        this.voiceEnabled = voiceEnabled;
     }
 
     public int getBroadcastLinesUnlocked() {
