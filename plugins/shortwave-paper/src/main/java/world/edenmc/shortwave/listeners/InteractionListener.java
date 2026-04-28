@@ -90,56 +90,43 @@ public class InteractionListener implements Listener {
     }
 
     private void handleCopperClick(PlayerInteractEvent event, Player player, Block copper) {
-        ItemStack item = player.getInventory().getItemInMainHand();
+        Material held = player.getInventory().getItemInMainHand().getType();
 
-        // Check if player is shift-clicking with empty hand (open tower GUI)
-        if (player.isSneaking() && item.getType() == Material.AIR) {
-            event.setCancelled(true);
+        // Axes scrape oxidation, honeycombs wax — let vanilla handle these
+        if (held.name().endsWith("_AXE") || held == Material.HONEYCOMB) {
+            return;
+        }
 
-            if (!hasRadioAccess(copper, player)) {
-                player.sendMessage(Component.text("You don't have permission to access this radio tower!", NamedTextColor.RED));
-                return;
-            }
-            
-            // Check if valid tower structure (4 blocks high)
+        RadioTower tower = plugin.getTowerManager().getTowerByBlock(copper);
+
+        // If no registered tower, only proceed if the structure above is valid.
+        // Silently ignore clicks on unrelated chiseled copper blocks.
+        if (tower == null) {
             Block lectern = copper.getLocation().clone().add(0, 1, 0).getBlock();
             Block copperTop = copper.getLocation().clone().add(0, 2, 0).getBlock();
             Block rod = copper.getLocation().clone().add(0, 3, 0).getBlock();
-            
-            if (lectern.getType() != Material.LECTERN || 
-                !copperTop.getType().name().contains("CHISELED_COPPER") ||
-                rod.getType() != Material.LIGHTNING_ROD) {
-                player.sendMessage(Component.text("Invalid tower structure!", NamedTextColor.RED));
-                player.sendMessage(Component.text("Required (bottom to top):", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("1. Chiseled Copper", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("2. Lectern", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("3. Chiseled Copper", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("4. Lightning Rod", NamedTextColor.GRAY));
+            if (lectern.getType() != Material.LECTERN ||
+                    !copperTop.getType().name().contains("CHISELED_COPPER") ||
+                    rod.getType() != Material.LIGHTNING_ROD) {
                 return;
             }
-            
-            RadioTower tower = plugin.getTowerManager().getTowerByBlock(copper);
+        }
 
-            if (tower == null) {
-                // Prompt for frequency to create tower
-                player.sendMessage(Component.text("Enter frequency (e.g., " +
-                        plugin.getConfigManager().getFrequencyFormatExample() + ") in chat:", NamedTextColor.YELLOW));
-                player.sendMessage(Component.text("Range: " +
-                        plugin.getConfigManager().getMinFrequency() + " - " +
-                        plugin.getConfigManager().getMaxFrequency(), NamedTextColor.GRAY));
-                pendingActions.put(player.getUniqueId(), new PendingAction(PendingAction.Type.SET_FREQUENCY, copper.getLocation()));
-            } else {
-                // Chunk is loaded (player is here) — refresh all cached state before opening GUI
-                tower.validateStructureFromBlocks();
-                tower.refreshOxidationFromBlock();
-                tower.refreshBookPages();
-                plugin.getGUIManager().openTowerGUI(player, tower);
-            }
+        event.setCancelled(true);
+
+        if (!hasRadioAccess(copper, player)) {
+            player.sendMessage(Component.text("You don't have permission to access this radio tower!", NamedTextColor.RED));
             return;
         }
-        
-        // If not shift-clicking, allow normal interactions
-        // Players can still right-click with items as before
+
+        if (tower == null) {
+            plugin.getGUIManager().openStartupCostGUI(player, copper.getLocation());
+        } else {
+            tower.validateStructureFromBlocks();
+            tower.refreshOxidationFromBlock();
+            tower.refreshBookPages();
+            plugin.getGUIManager().openTowerGUI(player, tower);
+        }
     }
     
     private void handleLecternClick(PlayerInteractEvent event, Player player, Block lectern) {
@@ -168,9 +155,14 @@ public class InteractionListener implements Listener {
             return;
         }
 
-        // Prompt for frequency
-        player.sendMessage(Component.text("Enter frequency to tune speaker (e.g., 104.5):", NamedTextColor.YELLOW));
-        pendingActions.put(player.getUniqueId(), new PendingAction(PendingAction.Type.TUNE_SPEAKER, below));
+        if (!plugin.getSpeakerManager().isSpeakerRegistered(below)) {
+            // First-time activation — require startup cost before tuning
+            plugin.getGUIManager().openSpeakerActivationGUI(player, below);
+        } else {
+            // Already registered — re-tune with no cost
+            player.sendMessage(Component.text("Enter frequency to tune speaker (e.g., 104.5):", NamedTextColor.YELLOW));
+            pendingActions.put(player.getUniqueId(), new PendingAction(PendingAction.Type.TUNE_SPEAKER, below));
+        }
     }
     
     
@@ -179,6 +171,29 @@ public class InteractionListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         
+        // Check for GUI-initiated speaker activation (startup cost paid, now entering frequency)
+        if (player.hasMetadata("shortwave_pending_speaker")) {
+            event.setCancelled(true);
+
+            String message = plugin.getConfigManager().normalizeFrequency(
+                    PlainTextComponentSerializer.plainText().serialize(event.message()));
+
+            if (!plugin.getConfigManager().isValidFrequency(message)) {
+                player.sendMessage(Component.text("Invalid frequency!", NamedTextColor.RED));
+                player.sendMessage(Component.text("Format: " + plugin.getConfigManager().getFrequencyFormatExample(), NamedTextColor.GRAY));
+                player.sendMessage(Component.text("Range: " + plugin.getConfigManager().getMinFrequency() +
+                        " - " + plugin.getConfigManager().getMaxFrequency(), NamedTextColor.GRAY));
+                player.removeMetadata("shortwave_pending_speaker", plugin);
+                return;
+            }
+
+            Location copperLoc = (Location) player.getMetadata("shortwave_pending_speaker").get(0).value();
+            player.removeMetadata("shortwave_pending_speaker", plugin);
+
+            Bukkit.getScheduler().runTask(plugin, () -> handleTuneSpeaker(player, copperLoc, message));
+            return;
+        }
+
         // Check for GUI-initiated frequency change
         if (player.hasMetadata("shortwave_pending_frequency")) {
             event.setCancelled(true);
@@ -260,14 +275,32 @@ public class InteractionListener implements Listener {
             player.sendMessage(Component.text("You must be holding a radio receiver!", NamedTextColor.RED));
             return;
         }
-        
+
         ItemMeta meta = compass.getItemMeta();
         meta.getPersistentDataContainer().set(frequencyKey, PersistentDataType.STRING, frequency);
         meta.displayName(Component.text("Radio [" + frequency + "]", NamedTextColor.GOLD));
         compass.setItemMeta(meta);
-        
+
         player.sendMessage(Component.text("Radio tuned to " + frequency, NamedTextColor.GREEN));
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+
+        List<RadioTower> inRange = new ArrayList<>();
+        for (RadioTower tower : plugin.getTowerManager().getActiveTowers()) {
+            if (tower.getFrequency().equals(frequency) && tower.isInRange(player.getLocation())) {
+                inRange.add(tower);
+            }
+        }
+        if (inRange.isEmpty()) {
+            player.sendMessage(Component.text("No active towers on " + frequency + " in range.", NamedTextColor.GRAY));
+        } else {
+            player.sendMessage(Component.text("Active signals on " + frequency + ":", NamedTextColor.AQUA));
+            for (RadioTower tower : inRange) {
+                Location loc = tower.getCopperLocation();
+                player.sendMessage(Component.text("  → X: " + loc.getBlockX() +
+                        ", Y: " + loc.getBlockY() +
+                        ", Z: " + loc.getBlockZ(), NamedTextColor.YELLOW));
+            }
+        }
     }
     
     private void handleSetFrequency(Player player, Location copperLoc, String frequency) {
@@ -328,7 +361,10 @@ public class InteractionListener implements Listener {
     
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        pendingActions.remove(event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        pendingActions.remove(player.getUniqueId());
+        player.removeMetadata("shortwave_pending_frequency", plugin);
+        player.removeMetadata("shortwave_pending_speaker", plugin);
     }
 
     private static class PendingAction {

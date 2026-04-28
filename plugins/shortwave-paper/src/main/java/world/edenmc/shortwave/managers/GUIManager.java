@@ -5,6 +5,7 @@ import world.edenmc.shortwave.models.RadioTower;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -1055,6 +1056,253 @@ public class GUIManager {
         lore.add(Component.empty());
         lore.add(Component.text("Click to toggle " + (on ? "OFF" : "ON"),
                 on ? NamedTextColor.RED : NamedTextColor.GREEN)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public void openSpeakerActivationGUI(Player player, Location copperLoc) {
+        String title = plugin.getConfigManager().getSpeakerStartupCostGuiTitle().replace("&", "§");
+        ClickableInventory gui = new ClickableInventory(27, title);
+
+        gui.setSlot(new DecorationStack(createSpeakerActivationInfoItem()), 4);
+        gui.setSlot(makeButton(createSpeakerStartupCostItem(), p -> performSpeakerStartupPayment(p, copperLoc)), 13);
+        gui.setSlot(makeButton(createCancelActivationButton(), p -> p.closeInventory()), 22);
+
+        DecorationStack border = new DecorationStack(createGlassPane());
+        for (int i = 0; i < 27; i++) {
+            if (gui.getSlot(i) == null) {
+                gui.setSlot(border, i);
+            }
+        }
+
+        gui.showInventory(player);
+    }
+
+    private void performSpeakerStartupPayment(Player player, Location copperLoc) {
+        Material costMaterial = plugin.getConfigManager().getSpeakerStartupCostMaterial();
+        int costAmount = plugin.getConfigManager().getSpeakerStartupCostAmount();
+
+        int amountInInventory = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == costMaterial) {
+                amountInInventory += item.getAmount();
+            }
+        }
+
+        if (amountInInventory < costAmount) {
+            player.sendMessage(Component.text("You need " + costAmount + "x " +
+                    costMaterial.name().replace("_", " ") +
+                    " to activate this speaker! You have " + amountInInventory + ".", NamedTextColor.RED));
+            player.closeInventory();
+            return;
+        }
+
+        int remaining = costAmount;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == costMaterial && remaining > 0) {
+                int stackAmount = item.getAmount();
+                if (stackAmount <= remaining) {
+                    remaining -= stackAmount;
+                    item.setAmount(0);
+                } else {
+                    item.setAmount(stackAmount - remaining);
+                    remaining = 0;
+                }
+            }
+        }
+
+        // Register the speaker immediately so re-clicking never charges again.
+        // Use the minimum valid frequency as a placeholder; player sets the real one in chat.
+        String placeholder = plugin.getConfigManager().normalizeFrequency(
+                String.valueOf((int) plugin.getConfigManager().getMinFrequency()));
+        plugin.getSpeakerManager().tuneSpeaker(copperLoc, placeholder);
+
+        player.closeInventory();
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
+        player.sendMessage(Component.text("Speaker activated! Enter frequency to tune (e.g., " +
+                plugin.getConfigManager().getFrequencyFormatExample() + ") in chat:", NamedTextColor.GREEN));
+        player.sendMessage(Component.text("Range: " +
+                plugin.getConfigManager().getMinFrequency() + " - " +
+                plugin.getConfigManager().getMaxFrequency(), NamedTextColor.GRAY));
+        player.setMetadata("shortwave_pending_speaker",
+                new FixedMetadataValue(plugin, copperLoc));
+    }
+
+    private ItemStack createSpeakerActivationInfoItem() {
+        ItemStack item = new ItemStack(Material.DECORATED_POT);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text("📻 Speaker Activation Required", NamedTextColor.GOLD)
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("This speaker must be activated before", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("it can receive broadcasts.", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text(""));
+        lore.add(Component.text("Pay the startup cost below to", NamedTextColor.YELLOW)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("proceed to frequency selection.", NamedTextColor.YELLOW)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createSpeakerStartupCostItem() {
+        Material material = plugin.getConfigManager().getSpeakerStartupCostMaterial();
+        int amount = plugin.getConfigManager().getSpeakerStartupCostAmount();
+        String displayName = plugin.getConfigManager().getSpeakerStartupCostDisplayName();
+        List<String> configLore = plugin.getConfigManager().getSpeakerStartupCostLore();
+
+        ItemStack item = new ItemStack(material, Math.max(1, amount));
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text(displayName.replace("&", "§"))
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("Cost: " + amount + "x " +
+                material.name().replace("_", " "), NamedTextColor.GOLD)
+                .decoration(TextDecoration.ITALIC, false));
+        for (String line : configLore) {
+            lore.add(Component.text(line.replace("&", "§"))
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        lore.add(Component.text(""));
+        lore.add(Component.text("Click to pay and activate!", NamedTextColor.GREEN)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("(Checks your inventory)", NamedTextColor.DARK_GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+        meta.setEnchantmentGlintOverride(true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public void openStartupCostGUI(Player player, Location copperLoc) {
+        String title = plugin.getConfigManager().getStartupCostGuiTitle().replace("&", "§");
+        ClickableInventory gui = new ClickableInventory(27, title);
+
+        gui.setSlot(new DecorationStack(createStartupInfoItem()), 4);
+        gui.setSlot(makeButton(createStartupCostItem(), p -> performStartupPayment(p, copperLoc)), 13);
+        gui.setSlot(makeButton(createCancelActivationButton(), p -> p.closeInventory()), 22);
+
+        DecorationStack border = new DecorationStack(createGlassPane());
+        for (int i = 0; i < 27; i++) {
+            if (gui.getSlot(i) == null) {
+                gui.setSlot(border, i);
+            }
+        }
+
+        gui.showInventory(player);
+    }
+
+    private void performStartupPayment(Player player, Location copperLoc) {
+        Material costMaterial = plugin.getConfigManager().getStartupCostMaterial();
+        int costAmount = plugin.getConfigManager().getStartupCostAmount();
+
+        int amountInInventory = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == costMaterial) {
+                amountInInventory += item.getAmount();
+            }
+        }
+
+        if (amountInInventory < costAmount) {
+            player.sendMessage(Component.text("You need " + costAmount + "x " +
+                    costMaterial.name().replace("_", " ") +
+                    " to activate this tower! You have " + amountInInventory + ".", NamedTextColor.RED));
+            player.closeInventory();
+            return;
+        }
+
+        int remaining = costAmount;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.getType() == costMaterial && remaining > 0) {
+                int stackAmount = item.getAmount();
+                if (stackAmount <= remaining) {
+                    remaining -= stackAmount;
+                    item.setAmount(0);
+                } else {
+                    item.setAmount(stackAmount - remaining);
+                    remaining = 0;
+                }
+            }
+        }
+
+        // Register the tower immediately so re-clicking never charges again.
+        // Use the minimum valid frequency as a placeholder; player sets the real one via the GUI.
+        String placeholder = plugin.getConfigManager().normalizeFrequency(
+                String.valueOf((int) plugin.getConfigManager().getMinFrequency()));
+        RadioTower tower = plugin.getTowerManager().createTower(copperLoc, placeholder);
+        tower.validateStructureFromBlocks();
+        tower.refreshOxidationFromBlock();
+        tower.refreshBookPages();
+
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.0f, 1.0f);
+        player.sendMessage(Component.text("Tower activated! Set your frequency via the tower menu.", NamedTextColor.GREEN));
+
+        openTowerGUI(player, tower);
+    }
+
+    private ItemStack createStartupInfoItem() {
+        ItemStack item = new ItemStack(Material.LIGHTNING_ROD);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text("📡 Tower Activation Required", NamedTextColor.GOLD)
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("This tower must be activated before", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("it can begin broadcasting.", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text(""));
+        lore.add(Component.text("Pay the startup cost below to", NamedTextColor.YELLOW)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("proceed to frequency selection.", NamedTextColor.YELLOW)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createStartupCostItem() {
+        Material material = plugin.getConfigManager().getStartupCostMaterial();
+        int amount = plugin.getConfigManager().getStartupCostAmount();
+        String displayName = plugin.getConfigManager().getStartupCostDisplayName();
+        List<String> configLore = plugin.getConfigManager().getStartupCostLore();
+
+        ItemStack item = new ItemStack(material, Math.max(1, amount));
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text(displayName.replace("&", "§"))
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("Cost: " + amount + "x " +
+                material.name().replace("_", " "), NamedTextColor.GOLD)
+                .decoration(TextDecoration.ITALIC, false));
+        for (String line : configLore) {
+            lore.add(Component.text(line.replace("&", "§"))
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        lore.add(Component.text(""));
+        lore.add(Component.text("Click to pay and activate!", NamedTextColor.GREEN)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("(Checks your inventory)", NamedTextColor.DARK_GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        meta.lore(lore);
+        meta.setEnchantmentGlintOverride(true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createCancelActivationButton() {
+        ItemStack item = new ItemStack(Material.BARRIER);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text("✖ Cancel Activation", NamedTextColor.RED)
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.text("The structure will remain but", NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false));
+        lore.add(Component.text("will not be activated.", NamedTextColor.GRAY)
                 .decoration(TextDecoration.ITALIC, false));
         meta.lore(lore);
         item.setItemMeta(meta);

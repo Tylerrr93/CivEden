@@ -27,6 +27,10 @@ public class SpeakerManager {
         this.gson = new GsonBuilder().setPrettyPrinting().create();
     }
 
+    public boolean isSpeakerRegistered(Location copperLocation) {
+        return speakers.containsKey(locationToKey(copperLocation));
+    }
+
     public void tuneSpeaker(Location copperLocation, String frequency) {
         speakers.put(locationToKey(copperLocation), new SpeakerEntry(copperLocation, frequency));
         save();

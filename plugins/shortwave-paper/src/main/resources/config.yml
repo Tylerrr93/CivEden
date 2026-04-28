@@ -27,6 +27,34 @@ frequency:
   decimal-places: 1
 
 # ============================================
+# STARTUP COST SETTINGS
+# ============================================
+
+# One-time cost to activate a newly built radio tower.
+# The structure is inert until the activation cost is paid.
+startup-cost:
+  # Item required to activate the tower
+  material: IRON_BLOCK
+  # Number of items required
+  amount: 5
+  # Display name shown in the activation GUI (supports & color codes)
+  display-name: "&7Activation Cost"
+  # Lore lines shown on the cost item in the GUI (supports & color codes)
+  lore:
+    - "&7Pay this cost to activate your tower"
+    - "&7and proceed to frequency selection."
+
+# One-time cost to activate a newly placed speaker (copper + decorated pot).
+# Re-tuning an existing speaker is always free.
+speaker-startup-cost:
+  material: IRON_INGOT
+  amount: 8
+  display-name: "&7Speaker Activation Cost"
+  lore:
+    - "&7Pay this cost to activate your speaker"
+    - "&7and proceed to frequency selection."
+
+# ============================================
 # FUEL SETTINGS
 # ============================================
 
@@ -276,6 +304,12 @@ gui:
 
   # Broadcast interval upgrade GUI title
   broadcast-interval-gui-title: "&6&l⏱ Broadcast Interval"
+
+  # Tower activation (startup cost) GUI title
+  startup-cost-gui-title: "&6&l📡 Tower Activation"
+
+  # Speaker activation (startup cost) GUI title
+  speaker-startup-cost-gui-title: "&6&l📻 Speaker Activation"
 
 # ============================================
 # ADVANCED SETTINGS

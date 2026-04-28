@@ -118,7 +118,10 @@ public class ShortwavePlugin extends JavaPlugin {
         if (speakerManager != null) {
             speakerManager.save();
         }
-        
+
+        // Remove any broadcast holograms still in the world
+        cleanupStuckHolograms();
+
         getLogger().info("Shortwave Radio Plugin disabled!");
     }
     

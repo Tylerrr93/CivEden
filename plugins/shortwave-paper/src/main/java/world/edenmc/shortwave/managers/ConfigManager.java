@@ -409,7 +409,61 @@ public class ConfigManager {
     public String getBroadcastIntervalGuiTitle() {
         return plugin.getConfig().getString("gui.broadcast-interval-gui-title", "&6&l⏱ Broadcast Interval");
     }
-    
+
+    public String getStartupCostGuiTitle() {
+        return plugin.getConfig().getString("gui.startup-cost-gui-title", "&6&l📡 Tower Activation");
+    }
+
+    public String getSpeakerStartupCostGuiTitle() {
+        return plugin.getConfig().getString("gui.speaker-startup-cost-gui-title", "&6&l📻 Speaker Activation");
+    }
+
+    // Startup cost settings
+    public Material getStartupCostMaterial() {
+        String item = plugin.getConfig().getString("startup-cost.material", "IRON_BLOCK");
+        try {
+            return Material.valueOf(item.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid startup cost material: " + item + ", using IRON_BLOCK");
+            return Material.IRON_BLOCK;
+        }
+    }
+
+    public int getStartupCostAmount() {
+        return plugin.getConfig().getInt("startup-cost.amount", 5);
+    }
+
+    public String getStartupCostDisplayName() {
+        return plugin.getConfig().getString("startup-cost.display-name", "&7Activation Cost");
+    }
+
+    public List<String> getStartupCostLore() {
+        return plugin.getConfig().getStringList("startup-cost.lore");
+    }
+
+    // Speaker startup cost settings
+    public Material getSpeakerStartupCostMaterial() {
+        String item = plugin.getConfig().getString("speaker-startup-cost.material", "IRON_INGOT");
+        try {
+            return Material.valueOf(item.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid speaker startup cost material: " + item + ", using IRON_INGOT");
+            return Material.IRON_INGOT;
+        }
+    }
+
+    public int getSpeakerStartupCostAmount() {
+        return plugin.getConfig().getInt("speaker-startup-cost.amount", 8);
+    }
+
+    public String getSpeakerStartupCostDisplayName() {
+        return plugin.getConfig().getString("speaker-startup-cost.display-name", "&7Speaker Activation Cost");
+    }
+
+    public List<String> getSpeakerStartupCostLore() {
+        return plugin.getConfig().getStringList("speaker-startup-cost.lore");
+    }
+
     // Other settings
 
     /**
