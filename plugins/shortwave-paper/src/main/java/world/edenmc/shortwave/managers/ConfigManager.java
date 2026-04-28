@@ -56,9 +56,17 @@ public class ConfigManager {
     }
     
     public String normalizeFrequency(String input) {
-        if (input != null && input.matches("\\d+")) {
-            int decimals = getFrequencyDecimalPlaces();
+        if (input == null) return null;
+        int decimals = getFrequencyDecimalPlaces();
+        if (input.matches("\\d+")) {
             return input + "." + "0".repeat(Math.max(1, decimals));
+        }
+        // Pad trailing zeros if fewer decimal places than required (e.g. "100.2" → "100.20")
+        if (input.matches("\\d+\\.\\d+")) {
+            int currentDecimals = input.length() - input.indexOf('.') - 1;
+            if (currentDecimals < decimals) {
+                return input + "0".repeat(decimals - currentDecimals);
+            }
         }
         return input;
     }
